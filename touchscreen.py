@@ -21,18 +21,36 @@ class Application(tk.Tk):
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
         
-        hor = InputMeasure(self, "Horizontal")
-        hor.grid(row=0, column=0, sticky="nsew")
-        hor.feet.focus_set()
+        self.hor = InputMeasure(self, "Horizontal")
+        self.hor.grid(row=0, column=0, sticky="nsew")
+        self.hor.feet.focus_set()
 
-        vert = InputMeasure(self, "Vertical")
-        vert.grid(row=1, column=0, sticky="nsew")
+        self.vert = InputMeasure(self, "Vertical")
+        self.vert.grid(row=1, column=0, sticky="nsew")
 
-        submit = ttk.Button(self, text="Send Cut")
+        submit = ttk.Button(self, text="Send Cut", command=self.validate_inputs)
         submit.grid(row=2, column=0, sticky="nsew")
 
-        keyboard = KeyBoard(self, [hor, vert])
+        keyboard = KeyBoard(self, [self.hor, self.vert])
         keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
+
+    def send_cuts(self):
+        if self.validate_inputs:
+            return True
+
+    def validate_inputs(self):
+        vals = [
+            self.hor.feet, self.hor.inch, self.hor.frac,
+            self.vert.feet, self.vert.inch, self.vert.frac
+        ]
+
+        for val in vals:
+            value = val.get()
+            if not value.isnumeric():
+                print("Invalid inputs: ", value)
+                return False
+            
+        return True
 
 
 
