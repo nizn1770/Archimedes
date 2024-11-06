@@ -1,5 +1,7 @@
+import config
 import tkinter as tk
 from tkinter import ttk
+
 
 
 def init_touchscreen():
@@ -12,6 +14,8 @@ def init_touchscreen():
 class Application(tk.Tk):
     def __init__(self):
         super().__init__()
+        global horizontal_len, vertical_len
+
         self.title("Archimedes")
 
         self.columnconfigure(0, weight=1)
@@ -28,31 +32,62 @@ class Application(tk.Tk):
         self.vert = InputMeasure(self, "Vertical")
         self.vert.grid(row=1, column=0, sticky="nsew")
 
-        submit = ttk.Button(self, text="Send Cut", command=self.validate_inputs)
+        submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
         submit.grid(row=2, column=0, sticky="nsew")
 
         keyboard = KeyBoard(self, [self.hor, self.vert])
         keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
 
     def send_cuts(self):
-        if self.validate_inputs:
-            return True
+        if not self.validate_inputs():
+            print("Invalid inputs")
+        else:
+            horizontal_len, vertical_len = self.combine_vals()
+            if horizontal_len > config.MAX_HORIZONTAL:
+                print("Horizontal cut is too large")
+            elif vertical_len > config.MAX_VERTICAL:
+                print("Vertical cut is too large.")
+            else:
+                print("Horizontal cut length: ", horizontal_len, "ft")
+                print("Vertical cut length: ", vertical_len, "ft")
 
+        self.clear_entries()
+        
+
+    def combine_vals(self):
+        hor_feet = int(self.hor.feet.get())
+        hor_inch = int(self.hor.inch.get())
+        hor_frac = int(self.hor.frac.get())
+
+        vert_feet = int(self.vert.feet.get())
+        vert_inch = int(self.vert.inch.get())
+        vert_frac = int(self.vert.frac.get())
+
+        hor_len = hor_feet + hor_inch * (1/12) + hor_frac * (1/16)
+        ver_len = vert_feet + vert_inch * (1/12) + vert_frac * (1/16)
+
+        return hor_len, ver_len
+
+    #Method to check if the values that are input have data and are numbers
     def validate_inputs(self):
-        vals = [
-            self.hor.feet, self.hor.inch, self.hor.frac,
-            self.vert.feet, self.vert.inch, self.vert.frac
-        ]
+        vals = [self.hor.feet.get(), self.hor.inch.get(), self.hor.frac.get(),
+        self.vert.feet.get(), self.vert.inch.get(), self.vert.frac.get()]
 
         for val in vals:
-            value = val.get()
-            if not value.isnumeric():
-                print("Invalid inputs: ", value)
+            if not val:
+                print("Empty String")
                 return False
-            
+            if not val.isnumeric():
+                print("Invalid inputs: ", val)
+                return False
         return True
 
-
+    #Method to clear text entries after the send cut button has been pressed
+    def clear_entries(self):
+        for input_measure in [self.hor, self.vert]:
+            input_measure.feet.delete(0, tk.END)
+            input_measure.inch.delete(0, tk.END)
+            input_measure.frac.delete(0, tk.END)
 
 class InputMeasure(ttk.Frame):
     def __init__(self, parent, title_text):
