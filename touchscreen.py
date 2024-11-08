@@ -171,7 +171,7 @@ class KeyBoard(ttk.Frame):
         self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
         self.zero.grid(row=3, column=1, sticky="nsew")
 
-        self.delete = ttk.Button(self, text="D", command=self.delete_text)
+        self.delete = ttk.Button(self, text="D", image="images/delete.png", command=self.delete_text)
         self.delete.grid(row=3, column=2, sticky="nsew")
 
     def insert_text(self, char):
