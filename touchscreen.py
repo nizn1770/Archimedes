@@ -15,15 +15,13 @@ def init_touchscreen(logger):
 class Application(tk.Tk):
     def __init__(self, logger):
         super().__init__()
+
         self.logger = logger
         self.logger.info("Archimedes initialized")
-
-        global horizontal_len, vertical_len
 
         self.title("Archimedes")
 
         self.attributes("-fullscreen", True)
-
         self.bind("<Escape>", self.exit_fullscreen)
 
         self.columnconfigure(0, weight=1)
@@ -53,14 +51,14 @@ class Application(tk.Tk):
         if not self.validate_inputs():
             print("Invalid inputs")
         else:
-            horizontal_len, vertical_len = self.combine_vals()
-            if horizontal_len > config.MAX_HORIZONTAL:
+            self.horizontal_len, self.vertical_len = self.combine_vals()
+            if self.horizontal_len > config.MAX_HORIZONTAL:
                 print("Horizontal cut is too large")
-            elif vertical_len > config.MAX_VERTICAL:
+            elif self.vertical_len > config.MAX_VERTICAL:
                 print("Vertical cut is too large.")
             else:
-                print("Horizontal cut length: ", horizontal_len, "ft")
-                print("Vertical cut length: ", vertical_len, "ft")
+                print("Horizontal cut length: ", self.horizontal_len, "ft")
+                print("Vertical cut length: ", self.vertical_len, "ft")
 
         self.clear_entries()
         
@@ -86,9 +84,11 @@ class Application(tk.Tk):
 
         for val in vals:
             if not val:
+                self.logger.info("String was empty. Values are invalid.")
                 print("Empty String")
                 return False
             if not val.isnumeric():
+                self.logger.info("String was not a valid numeric number.  Values are invalid.")
                 print("Invalid inputs: ", val)
                 return False
         return True
@@ -182,19 +182,16 @@ class KeyBoard(ttk.Frame):
         self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
         self.zero.grid(row=3, column=1, sticky="nsew")
 
-<<<<<<< Updated upstream
         #image = PhotoImage(file=r"C:\Users\nizni\University of St. Thomas\Archimedes - Code\Archimedes\images\delete.png")
         # add after text for image on image=image,
         self.delete = ttk.Button(self, text="D",  command=self.delete_text)
-=======
-        self.delete = ttk.Button(self, text="D", command=self.delete_text)
->>>>>>> Stashed changes
         self.delete.grid(row=3, column=2, sticky="nsew")
         #self.delete.image = image
 
     def insert_text(self, char):
         if self.active_entry:
             self.active_entry.insert(tk.END, str(char))
+            self.active_entry.focus_set()
 
     def delete_text(self):
         current_text = self.active_entry.get()
@@ -215,3 +212,5 @@ class KeyBoard(ttk.Frame):
             self.active_entry = self.input_measures[1].frac
         else:
             self.active_entry = self.input_measures[0].feet  
+
+        self.active_entry.focus_set()
