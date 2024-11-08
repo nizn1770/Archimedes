@@ -18,6 +18,10 @@ class Application(tk.Tk):
 
         self.title("Archimedes")
 
+        self.attributes("-fullscreen", True)
+
+        self.bind("<Escape>", self.exit_fullscreen)
+
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
 
@@ -35,8 +39,11 @@ class Application(tk.Tk):
         submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
         submit.grid(row=2, column=0, sticky="nsew")
 
-        keyboard = KeyBoard(self, [self.hor, self.vert])
-        keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
+        self.keyboard = KeyBoard(self, [self.hor, self.vert])
+        self.keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
+
+    def exit_fullscreen(self, event=None):
+        self.attributes("-fullscreen", False)
 
     def send_cuts(self):
         if not self.validate_inputs():
