@@ -48,20 +48,43 @@ class Application(tk.Tk):
         self.attributes("-fullscreen", False)
 
     def send_cuts(self):
-        if not self.validate_inputs():
-            print("Invalid inputs")
-        else:
-            self.horizontal_len, self.vertical_len = self.combine_vals()
-            if self.horizontal_len > config.MAX_HORIZONTAL:
-                print("Horizontal cut is too large")
-            elif self.vertical_len > config.MAX_VERTICAL:
-                print("Vertical cut is too large.")
-            else:
-                print("Horizontal cut length: ", self.horizontal_len, "ft")
-                print("Vertical cut length: ", self.vertical_len, "ft")
-
+        self.validate_inputs()
         self.clear_entries()
         
+    def validate_inputs(self):
+        self.check_numeric()
+        self.check_size()
+
+    def check_numeric(self):
+        vals = [self.hor.feet.get(), self.hor.inch.get(), self.hor.frac.get(),
+        self.vert.feet.get(), self.vert.inch.get(), self.vert.frac.get()]
+
+        for val in vals:
+            if not val:
+                self.logger.info("String was empty. Values are invalid.")
+                print("Empty String")
+                return False
+            if not val.isnumeric():
+                self.logger.info("String was not a valid numeric number.  Values are invalid.")
+                print("Invalid inputs: ", val)
+                return False
+        return True
+    
+    def check_size(self):
+        self.horizontal_len, self.vertical_len = self.combine_vals()
+        if self.horizontal_len > config.MAX_HORIZONTAL and self.vertical_len > config.MAX_VERTICAL:
+            self.logger.info(f"Horizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}\nVertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
+            print("Horizontal and vertical cuts are too large")
+        elif self.horizontal_len > config.MAX_HORIZONTAL:
+            self.logger.info(f"Horizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}")
+            print("Horizontal cut is too large")
+        elif self.vertical_len > config.MAX_VERTICAL:
+            self.logger.info(f"Vertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
+            print("Vertical cut is too large.")
+        else:
+            self.logger.info("Horizontal: {self.horizontal_len}\nVertical: {self.vertical_len}")
+            print("Horizontal cut length: ", self.horizontal_len, "ft")
+            print("Vertical cut length: ", self.vertical_len, "ft")
 
     def combine_vals(self):
         hor_feet = int(self.hor.feet.get())
@@ -76,23 +99,7 @@ class Application(tk.Tk):
         ver_len = vert_feet + vert_inch * (1/12) + vert_frac * (1/16)
 
         return hor_len, ver_len
-
-    #Method to check if the values that are input have data and are numbers
-    def validate_inputs(self):
-        vals = [self.hor.feet.get(), self.hor.inch.get(), self.hor.frac.get(),
-        self.vert.feet.get(), self.vert.inch.get(), self.vert.frac.get()]
-
-        for val in vals:
-            if not val:
-                self.logger.info("String was empty. Values are invalid.")
-                print("Empty String")
-                return False
-            if not val.isnumeric():
-                self.logger.info("String was not a valid numeric number.  Values are invalid.")
-                print("Invalid inputs: ", val)
-                return False
-        return True
-
+    
     #Method to clear text entries after the send cut button has been pressed
     def clear_entries(self):
         for input_measure in [self.hor, self.vert]:

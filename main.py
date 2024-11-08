@@ -5,7 +5,6 @@ from utils.logging_config import logger
 def main():
 
     logger.info("Archimedes started.")
-
     touchscreen.init_touchscreen(logger)
 
 

@@ -14,3 +14,9 @@
 2024-11-08 12:43:14,904 - ArchimedesApp - INFO - Archimedes initialized
 2024-11-08 12:44:59,650 - ArchimedesApp - INFO - Archimedes started.
 2024-11-08 12:44:59,718 - ArchimedesApp - INFO - Archimedes initialized
+2024-11-08 12:57:54,368 - ArchimedesApp - INFO - Archimedes started.
+2024-11-08 12:57:54,431 - ArchimedesApp - INFO - Archimedes initialized
+2024-11-08 12:58:27,691 - ArchimedesApp - INFO - Horizontal: {self.horizontal_len}
+Vertical: {self.vertical_len}
+2024-11-08 12:59:55,791 - ArchimedesApp - INFO - Horizontal: 5.0 is greater than 4
+Vertical: 4.5 is greater than 4
