@@ -1,8 +1,12 @@
 import touchscreen
 import cnc_control
+from utils.logging_config import logger
 
 def main():
-    touchscreen.init_touchscreen()
+
+    logger.info("Archimedes started.")
+
+    touchscreen.init_touchscreen(logger)
 
 
 

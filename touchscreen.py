@@ -5,16 +5,19 @@ from tkinter import PhotoImage
 
 
 
-def init_touchscreen():
+def init_touchscreen(logger):
     global root
 
-    app = Application()
+    app = Application(logger)
     app.mainloop()
 
 
 class Application(tk.Tk):
-    def __init__(self):
+    def __init__(self, logger):
         super().__init__()
+        self.logger = logger
+        self.logger.info("Archimedes initialized")
+
         global horizontal_len, vertical_len
 
         self.title("Archimedes")
@@ -179,9 +182,13 @@ class KeyBoard(ttk.Frame):
         self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
         self.zero.grid(row=3, column=1, sticky="nsew")
 
+<<<<<<< Updated upstream
         #image = PhotoImage(file=r"C:\Users\nizni\University of St. Thomas\Archimedes - Code\Archimedes\images\delete.png")
         # add after text for image on image=image,
         self.delete = ttk.Button(self, text="D",  command=self.delete_text)
+=======
+        self.delete = ttk.Button(self, text="D", command=self.delete_text)
+>>>>>>> Stashed changes
         self.delete.grid(row=3, column=2, sticky="nsew")
         #self.delete.image = image
 
