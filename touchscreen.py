@@ -1,6 +1,7 @@
 import config
 import tkinter as tk
 from tkinter import ttk
+from tkinter import PhotoImage
 
 
 
@@ -178,8 +179,11 @@ class KeyBoard(ttk.Frame):
         self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
         self.zero.grid(row=3, column=1, sticky="nsew")
 
-        self.delete = ttk.Button(self, text="D", command=self.delete_text)
+        #image = PhotoImage(file=r"C:\Users\nizni\University of St. Thomas\Archimedes - Code\Archimedes\images\delete.png")
+        # add after text for image on image=image,
+        self.delete = ttk.Button(self, text="D",  command=self.delete_text)
         self.delete.grid(row=3, column=2, sticky="nsew")
+        #self.delete.image = image
 
     def insert_text(self, char):
         if self.active_entry:
