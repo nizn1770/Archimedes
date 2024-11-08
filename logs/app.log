@@ -20,3 +20,31 @@
 Vertical: {self.vertical_len}
 2024-11-08 12:59:55,791 - ArchimedesApp - INFO - Horizontal: 5.0 is greater than 4
 Vertical: 4.5 is greater than 4
+2024-11-08 13:09:19,591 - ArchimedesApp - INFO
+Archimedes started.
+2024-11-08 13:09:21,276 - ArchimedesApp - INFO
+Archimedes initialized
+2024-11-08 13:09:46,648 - ArchimedesApp - INFO
+Horizontal: {self.horizontal_len}
+Vertical: {self.vertical_len}
+2024-11-08 13:10:27,461 - ArchimedesApp - INFO
+Horizontal: 5.0 is greater than 4
+Vertical: 5.3125 is greater than 4
+2024-11-08 16:03:29,535 - ArchimedesApp - INFO
+Archimedes started.
+2024-11-08 16:07:07,170 - ArchimedesApp - INFO
+Archimedes started.
+2024-11-08 16:08:29,443 - ArchimedesApp - INFO
+Archimedes started.
+2024-11-08 16:08:29,652 - ArchimedesApp - INFO
+Archimedes initialized
+2024-11-08 16:08:41,798 - ArchimedesApp - INFO
+Horizontal: {self.horizontal_len}
+Vertical: {self.vertical_len}
+2024-11-08 16:14:23,087 - ArchimedesApp - INFO
+Archimedes started.
+2024-11-08 16:14:23,212 - ArchimedesApp - INFO
+Archimedes initialized
+2024-11-08 16:14:39,198 - ArchimedesApp - INFO
+Horizontal: {self.horizontal_len}
+Vertical: {self.vertical_len}
