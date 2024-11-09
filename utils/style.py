@@ -42,10 +42,11 @@ def apply_styles(root):
     style.configure(
         'EntryTitle.TLabel',
         anchor='center',
-        font=('Arial', 18, 'bold', 'underline')
+        font=('Arial', 16, 'bold')
     )
 
     style.configure(
         'EntryText.TEntry',
+        anchor='center',
         font=('Arial 12')
     )

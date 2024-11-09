@@ -133,25 +133,25 @@ class InputMeasure(ttk.Frame):
         self.rowconfigure(2, weight=1)
 
         self.title = ttk.Label(self, text=title_text, style='EntryTitle.TLabel')
-        self.title.grid(row=0, column=0, columnspan=3, sticky="ew")
+        self.title.grid(row=0, column=0, columnspan=3, sticky="nsew")
 
-        self.feet = ttk.Entry(self, font=('Arial 16'))
-        self.feet.grid(row=1, column=0, sticky="ew")
+        self.feet = ttk.Entry(self, font=('Arial 12'))
+        self.feet.grid(row=1, column=0, sticky="nsew")
 
         self.feet_label = ttk.Label(self, text="Feet", style='EntryLabel.TLabel')
-        self.feet_label.grid(row=2, column=0, sticky="n")
+        self.feet_label.grid(row=2, column=0, sticky="nsew")
 
-        self.inch = ttk.Entry(self, font=('Arial 16'))
-        self.inch.grid(row=1, column=1, sticky="ew")
+        self.inch = ttk.Entry(self, font=('Arial 12'))
+        self.inch.grid(row=1, column=1, sticky="nsew")
 
         self.inch_label = ttk.Label(self, text="Inches", style='EntryLabel.TLabel')
-        self.inch_label.grid(row=2, column=1, sticky="n")
+        self.inch_label.grid(row=2, column=1, sticky="nsew")
 
-        self.frac = ttk.Entry(self, font=('Arial 16'))
-        self.frac.grid(row=1, column=2, sticky="ew")
+        self.frac = ttk.Entry(self, font=('Arial 12'))
+        self.frac.grid(row=1, column=2, sticky="nsew")
 
         self.frac_label = ttk.Label(self, text="Fraction", style='EntryLabel.TLabel')
-        self.frac_label.grid(row=2, column=2, sticky="n")
+        self.frac_label.grid(row=2, column=2, sticky="nsew")
     
 class KeyBoard(ttk.Frame):
     def __init__(self, parent, input_measures):
