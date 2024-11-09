@@ -50,6 +50,7 @@ class Application(tk.Tk):
     def send_cuts(self):
         self.validate_inputs()
         self.clear_entries()
+        self.keyboard.reset_entry()
         
     def validate_inputs(self):
         self.check_numeric()
@@ -82,7 +83,7 @@ class Application(tk.Tk):
             self.logger.info(f"Vertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
             print("Vertical cut is too large.")
         else:
-            self.logger.info("Horizontal: {self.horizontal_len}\nVertical: {self.vertical_len}")
+            self.logger.info(f"Horizontal: {self.horizontal_len}\nVertical: {self.vertical_len}")
             print("Horizontal cut length: ", self.horizontal_len, "ft")
             print("Vertical cut length: ", self.vertical_len, "ft")
 
@@ -106,6 +107,24 @@ class Application(tk.Tk):
             input_measure.feet.delete(0, tk.END)
             input_measure.inch.delete(0, tk.END)
             input_measure.frac.delete(0, tk.END)
+
+class BuildInputs(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
+        
+        self.hor = InputMeasure(self, "Horizontal")
+        self.hor.grid(row=0, column=0, sticky="nsew")
+        self.hor.feet.focus_set()
+
+        self.vert = InputMeasure(self, "Vertical")
+        self.vert.grid(row=1, column=0, sticky="nsew")
+
+        submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
+        submit.grid(row=2, column=0, sticky="nsew")
 
 class InputMeasure(ttk.Frame):
     def __init__(self, parent, title_text):
@@ -139,7 +158,7 @@ class InputMeasure(ttk.Frame):
 
         self.frac_label = ttk.Label(self, text="Fraction", font=('Arial 12'))
         self.frac_label.grid(row=2, column=2, sticky="n")
-
+    
 class KeyBoard(ttk.Frame):
     def __init__(self, parent, input_measures):
         super().__init__(parent)
@@ -205,6 +224,10 @@ class KeyBoard(ttk.Frame):
 
         if current_text:
             self.active_entry.delete(len(current_text)-1,tk.END)
+
+    def reset_entry(self):
+        self.active_entry = self.input_measures[0].feet
+        self.active_entry.focus_set()
 
     def switch_entry(self):
         if self.active_entry == self.input_measures[0].feet:
