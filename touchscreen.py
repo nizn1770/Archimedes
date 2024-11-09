@@ -25,24 +25,14 @@ class Application(tk.Tk):
         self.bind("<Escape>", self.exit_fullscreen)
 
         self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-
+        self.columnconfigure(1, weight=2)
         self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-        self.rowconfigure(2, weight=1)
-        
-        self.hor = InputMeasure(self, "Horizontal")
-        self.hor.grid(row=0, column=0, sticky="nsew")
-        self.hor.feet.focus_set()
 
-        self.vert = InputMeasure(self, "Vertical")
-        self.vert.grid(row=1, column=0, sticky="nsew")
+        self.inputs = BuildInputs(self)
+        self.inputs.grid(row=0, column=0, sticky='nsew')
 
-        submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
-        submit.grid(row=2, column=0, sticky="nsew")
-
-        self.keyboard = KeyBoard(self, [self.hor, self.vert])
-        self.keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
+        self.keyboard = KeyBoard(self, [self.inputs.hor, self.inputs.vert])
+        self.keyboard.grid(row=0, column=1, sticky="nsew")
 
     def exit_fullscreen(self, event=None):
         self.attributes("-fullscreen", False)
@@ -112,6 +102,8 @@ class BuildInputs(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.parent = parent
+
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
@@ -123,7 +115,7 @@ class BuildInputs(ttk.Frame):
         self.vert = InputMeasure(self, "Vertical")
         self.vert.grid(row=1, column=0, sticky="nsew")
 
-        submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
+        submit = ttk.Button(self, text="Send Cut", command=self.parent.send_cuts)
         submit.grid(row=2, column=0, sticky="nsew")
 
 class InputMeasure(ttk.Frame):
@@ -142,19 +134,19 @@ class InputMeasure(ttk.Frame):
         self.title.grid(row=0, column=0, columnspan=3, sticky="ew")
 
         self.feet = ttk.Entry(self, font=('Arial 12'))
-        self.feet.grid(row=1, column=0, sticky="ew")
+        self.feet.grid(row=1, column=0, sticky="new")
 
         self.feet_label = ttk.Label(self, text="Feet", font=('Arial 12'))
         self.feet_label.grid(row=2, column=0, sticky="n")
 
         self.inch = ttk.Entry(self, font=('Arial 12'))
-        self.inch.grid(row=1, column=1, sticky="ew")
+        self.inch.grid(row=1, column=1, sticky="new")
 
         self.inch_label = ttk.Label(self, text="Inches", font=('Arial 12'))
         self.inch_label.grid(row=2, column=1, sticky="n")
 
         self.frac = ttk.Entry(self, font=('Arial 12'))
-        self.frac.grid(row=1, column=2, sticky="ew")
+        self.frac.grid(row=1, column=2, sticky="new")
 
         self.frac_label = ttk.Label(self, text="Fraction", font=('Arial 12'))
         self.frac_label.grid(row=2, column=2, sticky="n")
