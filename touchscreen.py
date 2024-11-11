@@ -24,6 +24,7 @@ class Application(tk.Tk):
 
         self.attributes("-fullscreen", True)
         self.bind("<Escape>", self.exit_fullscreen)
+        self.bind("Q", self.quit_program)
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -47,6 +48,8 @@ class Application(tk.Tk):
 
     def exit_fullscreen(self, event=None):
         self.attributes("-fullscreen", False)
+    
+    def quit_program(self, event=None):
         sys.exit(0)
 
     def send_cuts(self):
@@ -55,22 +58,29 @@ class Application(tk.Tk):
         self.keyboard.reset_entry()
         
     def validate_inputs(self):
+        self.get_vals()
         self.check_numeric()
         self.check_size()
 
-    def check_numeric(self):
-        vals = [self.hor.feet.get(), self.hor.inch.get(), self.hor.frac.get(),
+    def get_vals(self):
+        self.vals = [self.hor.feet.get(), self.hor.inch.get(), self.hor.frac.get(),
         self.vert.feet.get(), self.vert.inch.get(), self.vert.frac.get()]
 
-        for val in vals:
-            if not val:
-                self.logger.info("String was empty. Values are invalid.")
-                print("Empty String")
-                return False
-            if not val.isnumeric():
-                self.logger.info("String was not a valid numeric number.  Values are invalid.")
-                print("Invalid inputs: ", val)
-                return False
+        print(self.vals)
+
+    def check_numeric(self):
+        for i in range(0,6):
+            if self.vals[i]:
+                if not self.vals[i].isnumeric():
+                    self.logger.info("String was not a valid numeric number.  Values are invalid.")
+                    print("Invalid inputs: ", self.vals[i])
+                    return False
+                else:
+                    self.vals[i] = int(self.vals[i])
+            else:
+                self.vals[i] = int(0)
+            
+        print(self.vals)
         return True
     
     def check_size(self):
@@ -90,16 +100,8 @@ class Application(tk.Tk):
             print("Vertical cut length: ", self.vertical_len, "")
 
     def combine_vals(self):
-        hor_feet = int(self.hor.feet.get())
-        hor_inch = int(self.hor.inch.get())
-        hor_frac = int(self.hor.frac.get())
-
-        vert_feet = int(self.vert.feet.get())
-        vert_inch = int(self.vert.inch.get())
-        vert_frac = int(self.vert.frac.get())
-
-        hor_len = hor_feet * 12 + hor_inch + hor_frac * (1/16)
-        ver_len = vert_feet * 12 + vert_inch + vert_frac * (1/16)
+        hor_len = self.vals[0] * 12 + self.vals[1] + self.vals[2] * (1/16)
+        ver_len = self.vals[3] * 12 + self.vals[4] + self.vals[5] * (1/16)
 
         return hor_len, ver_len
     
