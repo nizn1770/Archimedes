@@ -95,9 +95,9 @@ class Application(tk.Tk):
             self.logger.info(f"\nVertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
             print("Vertical cut is too large.")
         else:
-            self.logger.info(f"\nHorizontal: {self.horizontal_len}\nVertical: {self.vertical_len}")
-            print("Horizontal cut length: ", self.horizontal_len, "in")
-            print("Vertical cut length: ", self.vertical_len, "")
+            self.logger.info(f"\nHorizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\nVertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+            print("Horizontal cut length: ", self.horizontal_len/12, "ft (", self.horizontal_len, "in)")
+            print("Vertical cut length: ", self.vertical_len/12, "ft (", self.vertical_len, "in)")
 
     def combine_vals(self):
         hor_len = self.vals[0] * 12 + self.vals[1] + self.vals[2] * (1/16)
