@@ -76,18 +76,18 @@ class Application(tk.Tk):
     def check_size(self):
         self.horizontal_len, self.vertical_len = self.combine_vals()
         if self.horizontal_len > config.MAX_HORIZONTAL and self.vertical_len > config.MAX_VERTICAL:
-            self.logger.info(f"Horizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}\nVertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
+            self.logger.info(f"\nHorizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}\nVertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
             print("Horizontal and vertical cuts are too large")
         elif self.horizontal_len > config.MAX_HORIZONTAL:
-            self.logger.info(f"Horizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}")
+            self.logger.info(f"\nHorizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}")
             print("Horizontal cut is too large")
         elif self.vertical_len > config.MAX_VERTICAL:
-            self.logger.info(f"Vertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
+            self.logger.info(f"\nVertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
             print("Vertical cut is too large.")
         else:
-            self.logger.info(f"Horizontal: {self.horizontal_len}\nVertical: {self.vertical_len}")
-            print("Horizontal cut length: ", self.horizontal_len, "ft")
-            print("Vertical cut length: ", self.vertical_len, "ft")
+            self.logger.info(f"\nHorizontal: {self.horizontal_len}\nVertical: {self.vertical_len}")
+            print("Horizontal cut length: ", self.horizontal_len, "in")
+            print("Vertical cut length: ", self.vertical_len, "")
 
     def combine_vals(self):
         hor_feet = int(self.hor.feet.get())
@@ -98,8 +98,8 @@ class Application(tk.Tk):
         vert_inch = int(self.vert.inch.get())
         vert_frac = int(self.vert.frac.get())
 
-        hor_len = hor_feet + hor_inch * (1/12) + hor_frac * (1/192)
-        ver_len = vert_feet + vert_inch * (1/12) + vert_frac * (1/192)
+        hor_len = hor_feet * 12 + hor_inch + hor_frac * (1/16)
+        ver_len = vert_feet * 12 + vert_inch + vert_frac * (1/16)
 
         return hor_len, ver_len
     
