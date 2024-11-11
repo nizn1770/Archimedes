@@ -96,8 +96,8 @@ class Application(tk.Tk):
         vert_inch = int(self.vert.inch.get())
         vert_frac = int(self.vert.frac.get())
 
-        hor_len = hor_feet + hor_inch * (1/12) + hor_frac * (1/16)
-        ver_len = vert_feet + vert_inch * (1/12) + vert_frac * (1/16)
+        hor_len = hor_feet + hor_inch * (1/12) + hor_frac * (1/192)
+        ver_len = vert_feet + vert_inch * (1/12) + vert_frac * (1/192)
 
         return hor_len, ver_len
     
