@@ -1,3 +1,4 @@
+import sys
 import config
 import tkinter as tk
 from tkinter import ttk
@@ -46,6 +47,7 @@ class Application(tk.Tk):
 
     def exit_fullscreen(self, event=None):
         self.attributes("-fullscreen", False)
+        sys.exit(0)
 
     def send_cuts(self):
         self.validate_inputs()

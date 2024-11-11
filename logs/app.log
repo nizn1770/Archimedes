@@ -20,3 +20,7 @@
 Vertical: {self.vertical_len}
 2024-11-08 12:59:55,791 - ArchimedesApp - INFO - Horizontal: 5.0 is greater than 4
 Vertical: 4.5 is greater than 4
+2024-11-11 15:13:05,354 - ArchimedesApp - INFO
+Archimedes started.
+2024-11-11 15:13:05,493 - ArchimedesApp - INFO
+Archimedes initialized
