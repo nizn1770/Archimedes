@@ -208,6 +208,8 @@ class KeyBoard(ttk.Frame):
 
         if current_text:
             self.active_entry.delete(len(current_text)-1,tk.END)
+        else:
+            self.switch_entry_back()
 
     def reset_entry(self):
         self.active_entry = self.input_measures[0].feet
@@ -226,5 +228,21 @@ class KeyBoard(ttk.Frame):
             self.active_entry = self.input_measures[1].frac
         else:
             self.active_entry = self.input_measures[0].feet  
+
+        self.active_entry.focus_set()
+
+    def switch_entry_back(self):
+        if self.active_entry == self.input_measures[0].feet:
+            self.active_entry = self.input_measures[1].frac
+        elif self.active_entry == self.input_measures[0].inch:
+            self.active_entry = self.input_measures[0].feet
+        elif self.active_entry == self.input_measures[0].frac:
+            self.active_entry = self.input_measures[0].inch 
+        elif self.active_entry == self.input_measures[1].feet:
+            self.active_entry = self.input_measures[0].frac
+        elif self.active_entry == self.input_measures[1].inch:
+            self.active_entry = self.input_measures[1].feet
+        else:
+            self.active_entry = self.input_measures[1].inch 
 
         self.active_entry.focus_set()
