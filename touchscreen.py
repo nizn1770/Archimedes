@@ -1,10 +1,11 @@
 import sys
 import config
+import requests
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 from tkinter import messagebox
-
+from io import BytesIO
 
 
 def init_touchscreen(logger):
@@ -210,17 +211,21 @@ class KeyBoard(ttk.Frame):
         self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9))
         self.nine.grid(row=2, column=2, sticky="nsew")
 
-        self.next = ttk.Button(self, text="N", command=self.switch_entry)
+        self.checkmark_image = self.download_image(config.NEXT_IMAGE)
+        self.next = ttk.Button(self, text="N", image=self.checkmark_image, command=self.switch_entry)
         self.next.grid(row=3, column=0, sticky="nsew")
 
         self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
         self.zero.grid(row=3, column=1, sticky="nsew")
 
-        #image = PhotoImage(file=r"C:\Users\nizni\University of St. Thomas\Archimedes - Code\Archimedes\images\delete.png")
-        # add after text for image on image=image,
-        self.delete = ttk.Button(self, text="D",  command=self.delete_text)
+        self.delete_image = self.download_image(config.DELETE_IMAGE)
+        self.delete = ttk.Button(self, text="D", image=self.delete_image,  command=self.delete_text)
         self.delete.grid(row=3, column=2, sticky="nsew")
-        #self.delete.image = image
+        
+    def download_image(self, image_url):
+        response = requests.get(image_url)
+        image_data = response.content
+        return PhotoImage(data=image_data)
 
     def insert_text(self, char):
         if self.active_entry:
