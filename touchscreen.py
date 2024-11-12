@@ -194,35 +194,34 @@ class Application(tk.Tk):
         message = ""
 
         if self.horizontal_len > config.MAX_HORIZONTAL:
-            message += (f"Horizontal cut is too large:\n"
+            message += (f"\nHorizontal cut is too large:\n"
                        f"Max Horizontal Cut: {config.MAX_HORIZONTAL/12} ft ({config.MAX_HORIZONTAL} in)\n"
-                       f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)")
-            self.bad_cut_length = True
-        
-        if self.vertical_len > config.MAX_VERTICAL:
-            message += (f"Vertical cut is too large:\n"
-                       f"Max Vertical Cut: {config.MAX_VERTICAL/12} ft ({config.MAX_VERTICAL} in)\n"
-                       f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)")
+                       f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n")
             self.bad_cut_length = True
         
         if self.horizontal_len < config.MIN_HORIZONTAL:
-            message += (f"Horizontal cut is too small:\n"
+            message += (f"\nHorizontal cut is too small:\n"
                        f"Min Horizontal Cut: {config.MIN_HORIZONTAL/12} ft ({config.MIN_HORIZONTAL} in)\n"
-                       f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)")
+                       f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n")
             self.bad_cut_length = True
-        
+
+        if self.vertical_len > config.MAX_VERTICAL:
+            message += (f"\nVertical cut is too large:\n"
+                       f"Max Vertical Cut: {config.MAX_VERTICAL/12} ft ({config.MAX_VERTICAL} in)\n"
+                       f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)\n")
+            self.bad_cut_length = True
+                
         if self.vertical_len < config.MIN_VERTICAL:
-            message += (f"Vertical cut is too small:\n"
+            message += (f"\nVertical cut is too small:\n"
                        f"Min Vertical Cut: {config.MIN_VERTICAL/12} ft ({config.MIN_VERTICAL} in)\n"
-                       f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)")
+                       f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)\n")
             self.bad_cut_length = True
 
         if self.bad_cut_length:
             messagebox.showwarning("Cut Size Warning", message)
 
         else:
-            message = (f"Horizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)"
-                       f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+            message = (f"Horizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in) - Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
         
         self.logger.info(message)
         print(message)
