@@ -20,6 +20,7 @@ def apply_styles(root):
         foreground=[('disabled', 'grey')]
     )
 
+    #Keyboard button style
     style.configure(
         'Key.TButton',
         background='grey',
@@ -34,17 +35,20 @@ def apply_styles(root):
         foreground=[('disabled', 'grey')]
     )
 
+    #Input label style
     style.configure(
         'EntryLabel.TLabel',
         font=('Arial', 12)
     )
 
+    #Title label style
     style.configure(
         'EntryTitle.TLabel',
         anchor='center',
-        font=('Arial', 18, 'bold', 'underline')
+        font=('Arial', 18, 'bold')
     )
 
+    
     style.configure(
         'EntryText.TEntry',
         font=('Arial 12')
