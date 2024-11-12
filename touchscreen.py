@@ -58,6 +58,23 @@ class Application(tk.Tk):
         self.validate_inputs()
         self.clear_entries()
         self.keyboard.reset_entry()
+        self.show_progress()
+
+        self.after(5000, self.finish_cut)
+
+    def show_progress(self):
+        self.progress_window = tk.Toplevel(self)
+        self.progress_window.attributes("-topmost", True)
+        self.progress_window.attributes("-fullscreen", True)
+        self.progress_window.title("Cutting")
+
+        progress_label = ttk.Label(self.progress_window, text="Cut is being made...", font="Arial 16")
+        progress_label.pack(expand=True)
+    
+    def finish_cut(self):
+        self.progress_window.destroy()
+        messagebox.showinfo("Cut Completed", "The cut has been successfully completed.")
+     
         
     def validate_inputs(self):
         self.get_vals()
