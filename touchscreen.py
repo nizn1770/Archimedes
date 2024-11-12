@@ -87,26 +87,32 @@ class Application(tk.Tk):
         message = ""
 
         if self.horizontal_len > config.MAX_HORIZONTAL and self.vertical_len > config.MAX_VERTICAL:
-            message = (f"\nBoth cutss are too large:\n"
-                        f"Horizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}\n"
-                        f"Vertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
+            message = (f"\nBoth cuts are too large:\n"
+                       f"Max Horizontal cut: {config.MAX_HORIZONTAL/12} ft ({config.MAX_HORIZONTAL} in)\n"
+                       f"Input Horizontal cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
+                       f"Max Vertical Cut: {config.MAX_VERTICAL/12} ft ({config.MAX_VERTICAL} in)\n"
+                       f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)")
             too_large = True
         elif self.horizontal_len > config.MAX_HORIZONTAL:
-            message = (f"\nHorizontal cut is too large:\n{self.horizontal_len} > {config.MAX_HORIZONTAL}")
+            message = (f"\nHorizontal cut is too large:\n"
+                       f"Max Horizontal cut: {config.MAX_HORIZONTAL/12} ft ({config.MAX_HORIZONTAL} in)\n"
+                       f"Input Horizontal cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)")
             too_large = True
         elif self.vertical_len > config.MAX_VERTICAL:
-            message = (f"\nVertical cut is too large:\n{self.vertical_len} > {config.MAX_VERTICAL}")
+            message = (f"\nVertical cut is too large:\n"
+                       f"Max Vertical Cut: {config.MAX_VERTICAL/12} ft ({config.MAX_VERTICAL} in)\n"
+                       f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)")
             too_large = True
         
         if too_large:
-            self.logger.info(message)
+            messagebox.showwarning("Cut Size Warning", message)
 
         else:
             message = (f"\nHorizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
                        f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
         
+        self.logger.info(message)
         print(message)
-        messagebox.showwarning("Cut Size Warning", message)
             
 
     def combine_vals(self):
