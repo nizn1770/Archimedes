@@ -58,20 +58,22 @@ class Application(tk.Tk):
 
     def send_cuts(self):
         self.validate_inputs()
+        if self.valid_inputs:
+
+            self.confirmation_response = None
+            self.confirm_cuts()
+
+            self.wait_window(self.confirmation_window)
+
+            if self.confirmation_response:
+                self.show_progress()
+            else:
+                title = "Cut Canceled"
+                message = "The cut has been canceled."
+                messagebox.showinfo(title, message)
+
         self.clear_entries()
         self.keyboard.reset_entry()
-
-        self.confirmation_response = None
-        self.confirm_cuts()
-
-        self.wait_window(self.confirmation_window)
-
-        if self.confirmation_response:
-            self.show_progress()
-        else:
-            title = "Cut Canceled"
-            message = "The cut has been canceled."
-            messagebox.showinfo(title, message)
 
     def confirm_cuts(self):
         message = (f"Horizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
@@ -157,58 +159,65 @@ class Application(tk.Tk):
      
         
     def validate_inputs(self):
+        self.valid_inputs = False
         self.get_vals()
         self.check_numeric()
         self.check_size()
+
+        if self.numeric and not self.bad_cut_length:
+            self.valid_inputs = True
+        else:
+            self.valid_inputs =  False
+
 
     def get_vals(self):
         self.vals = [self.hor.feet.get(), self.hor.inch.get(), self.hor.frac.get(),
         self.vert.feet.get(), self.vert.inch.get(), self.vert.frac.get()]
 
+
     def check_numeric(self):
+        self.numeric = True
         for i in range(0,6):
             if self.vals[i]:
                 if not self.vals[i].isnumeric():
-                    self.logger.info("String was not a valid numeric number.  Values are invalid.")
-                    print("Invalid inputs: ", self.vals[i])
-                    return False
+                    self.logger.info(f"Invalid value: {self.vals[i]}")
+                    self.numeric = False
                 else:
                     self.vals[i] = int(self.vals[i])
             else:
                 self.vals[i] = int(0)
 
-        return True
     
     def check_size(self):
         self.horizontal_len, self.vertical_len = self.combine_vals()
-        bad_cut_length = False
+        self.bad_cut_length = False
         message = ""
 
         if self.horizontal_len > config.MAX_HORIZONTAL:
             message += (f"Horizontal cut is too large:\n"
                        f"Max Horizontal Cut: {config.MAX_HORIZONTAL/12} ft ({config.MAX_HORIZONTAL} in)\n"
                        f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)")
-            bad_cut_length = True
+            self.bad_cut_length = True
         
         if self.vertical_len > config.MAX_VERTICAL:
             message += (f"Vertical cut is too large:\n"
                        f"Max Vertical Cut: {config.MAX_VERTICAL/12} ft ({config.MAX_VERTICAL} in)\n"
                        f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)")
-            bad_cut_length = True
+            self.bad_cut_length = True
         
         if self.horizontal_len < config.MIN_HORIZONTAL:
             message += (f"Horizontal cut is too small:\n"
                        f"Min Horizontal Cut: {config.MIN_HORIZONTAL/12} ft ({config.MIN_HORIZONTAL} in)\n"
                        f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)")
-            bad_cut_length = True
+            self.bad_cut_length = True
         
         if self.vertical_len < config.MIN_VERTICAL:
             message += (f"Vertical cut is too small:\n"
                        f"Min Vertical Cut: {config.MIN_VERTICAL/12} ft ({config.MIN_VERTICAL} in)\n"
                        f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)")
-            bad_cut_length = True
+            self.bad_cut_length = True
 
-        if bad_cut_length:
+        if self.bad_cut_length:
             messagebox.showwarning("Cut Size Warning", message)
 
         else:
