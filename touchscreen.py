@@ -86,6 +86,7 @@ class Application(tk.Tk):
         cancel_button.pack(pady=10)
 
         threading.Thread(target=self.cut).start()
+        self.logger.info("Cut Starting")
 
     def cut(self):
         title = ""
@@ -98,10 +99,12 @@ class Application(tk.Tk):
             time.sleep(0.1)
         if self.cancel_flag:
             title = "Cut Canceled"
-            message = "The cut has been canceled without completing."
+            message = "The cut has been canceled manually."
+            self.logger.info(title, " - ", message)
         else:
             title = "Cut Completed"
             message = "The cut has been completed successfully"
+            self.logger.info(title, " - ", message)
         self.finish_cut(title, message)
 
 
