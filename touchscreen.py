@@ -67,7 +67,6 @@ class Application(tk.Tk):
         self.wait_window(self.confirmation_window)
 
         if self.confirmation_response:
-            print("confirmed")
             self.show_progress()
         else:
             title = "Cut Canceled"
@@ -97,6 +96,7 @@ class Application(tk.Tk):
 
 
     def confirmation_result(self, response):
+        self.logger.info(f"Cut confirmation response: {response}")
         self.confirmation_response = response
         self.confirmation_window.destroy()
         
