@@ -1,6 +1,8 @@
 import sys
 import config
 import requests
+import threading
+import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
@@ -58,22 +60,97 @@ class Application(tk.Tk):
         self.validate_inputs()
         self.clear_entries()
         self.keyboard.reset_entry()
-        self.show_progress()
 
-        self.after(5000, self.finish_cut)
+        self.confirmation_response = None
+        self.confirm_cuts()
+
+        self.wait_window(self.confirmation_window)
+
+        if self.confirmation_response:
+            print("confirmed")
+            self.show_progress()
+        else:
+            title = "Cut Canceled"
+            message = "The cut has been canceled."
+            messagebox.showinfo(title, message)
+
+    def confirm_cuts(self):
+        message = (f"\nHorizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
+                       f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+
+        self.confirmation_window = tk.Toplevel(self)
+        self.confirmation_window.attributes("-topmost", True)
+        self.confirmation_window.attributes("-fullscreen", True)
+        self.confirmation_window.title("Confirm")
+
+        question_label = ttk.Label(self.confirmation_window, text="Is this the correct cut?", font="Arial 16")
+        question_label.pack(pady=10)
+
+        cut_length = ttk.Label(self.confirmation_window, text=message, font="Arial 16")
+        cut_length.pack(pady=10)
+
+        confirmation_button = ttk.Button(self.confirmation_window, text="Confirm", command=lambda: self.confirmation_result(True))
+        confirmation_button.pack(pady=10)
+
+        cancelation_button = ttk.Button(self.confirmation_window, text="Cancel", command=lambda: self.confirmation_result(False))
+        cancelation_button.pack(pady=10)
+
+
+    def confirmation_result(self, response):
+        self.confirmation_response = response
+        self.confirmation_window.destroy()
+        
 
     def show_progress(self):
+        self.cancel_flag = False
+        
+        message = (f"\nHorizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
+                       f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+
         self.progress_window = tk.Toplevel(self)
         self.progress_window.attributes("-topmost", True)
         self.progress_window.attributes("-fullscreen", True)
         self.progress_window.title("Cutting")
 
-        progress_label = ttk.Label(self.progress_window, text="Cut is being made...", font="Arial 16")
-        progress_label.pack(expand=True)
-    
-    def finish_cut(self):
+        progress_label = ttk.Label(self.progress_window, text="Cutting Board", font="Arial 16")
+        progress_label.pack(pady=10)
+
+        cut_length = ttk.Label(self.progress_window, text=message, font="Arial 16")
+        cut_length.pack(pady=10)
+
+        self.progress_bar = ttk.Progressbar(self.progress_window, maximum=100)
+        self.progress_bar.pack(pady=10, padx=10, fill='x')
+
+        cancel_button = ttk.Button(self.progress_window, text="Cancel Cut", command=lambda: self.cancel_process())
+        cancel_button.pack(pady=10)
+
+        threading.Thread(target=self.cut).start()
+
+    def cut(self):
+        title = ""
+        message = ""
+        for i in range(50):
+            if self.cancel_flag:
+                break
+            else:
+                self.progress_bar.step(2)
+            time.sleep(0.1)
+        if self.cancel_flag:
+            title = "Cut Canceled"
+            message = "The cut has been canceled without completing."
+        else:
+            title = "Cut Completed"
+            message = "The cut has been completed successfully"
+        self.finish_cut(title, message)
+
+
+    def cancel_process(self):
+        self.cancel_flag = True
+        
+
+    def finish_cut(self, title, message):
         self.progress_window.destroy()
-        messagebox.showinfo("Cut Completed", "The cut has been successfully completed.")
+        messagebox.showinfo(title, message)
      
         
     def validate_inputs(self):
