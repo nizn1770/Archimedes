@@ -44,7 +44,7 @@ def apply_styles(root):
     #Title label style
     style.configure(
         'EntryTitle.TLabel',
-        anchor='center',
+        #anchor='center',
         font=('Arial', 18, 'bold')
     )
 

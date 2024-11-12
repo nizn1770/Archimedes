@@ -185,17 +185,18 @@ class KeyBoard(ttk.Frame):
         self.nine = ttk.Button(self, text="9", style='Key.TButton', command=lambda: self.insert_text(9))
         self.nine.grid(row=2, column=2, sticky="nsew")
 
-        self.next = ttk.Button(self, text="N", style='Key.TButton', command=self.switch_entry)
+        self.checkmark_image = PhotoImage(file=r"C:\Users\nizni\University of St. Thomas\Archimedes - Code\Archimedes\images\checkmark.png")
+        self.next = ttk.Button(self, text="N", image=self.checkmark_image, style='Key.TButton', command=self.switch_entry)
         self.next.grid(row=3, column=0, sticky="nsew")
 
         self.zero = ttk.Button(self, text="0", style='Key.TButton', command=lambda: self.insert_text(0))
         self.zero.grid(row=3, column=1, sticky="nsew")
 
-        #image = PhotoImage(file=r"C:\Users\nizni\University of St. Thomas\Archimedes - Code\Archimedes\images\delete.png")
-        # add after text for image on image=image,
-        self.delete = ttk.Button(self, text="D", style='Key.TButton', command=self.delete_text)
+        
+        self.delete_image = PhotoImage(file=r"C:\Users\nizni\University of St. Thomas\Archimedes - Code\Archimedes\images\delete.png")
+        self.delete = ttk.Button(self, text="D", image=self.delete_image, style='Key.TButton', command=self.delete_text)
         self.delete.grid(row=3, column=2, sticky="nsew")
-        #self.delete.image = image
+        
 
     def insert_text(self, char):
         if self.active_entry:
