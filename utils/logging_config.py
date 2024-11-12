@@ -1,6 +1,9 @@
 import logging
 import os
 
+def init_logging():
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+
 
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
