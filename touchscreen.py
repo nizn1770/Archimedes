@@ -100,11 +100,11 @@ class Application(tk.Tk):
         if self.cancel_flag:
             title = "Cut Canceled"
             message = "The cut has been canceled manually."
-            self.logger.info(title, " - ", message)
+            self.logger.info(f"{title} - {message}")
         else:
             title = "Cut Completed"
-            message = "The cut has been completed successfully"
-            self.logger.info(title, " - ", message)
+            message = "The cut has been completed successfully."
+            self.logger.info(f"{title} - {message}")
         self.finish_cut(title, message)
 
 
