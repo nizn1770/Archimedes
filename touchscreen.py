@@ -3,6 +3,7 @@ import config
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
+from tkinter import messagebox
 
 
 
@@ -66,8 +67,6 @@ class Application(tk.Tk):
         self.vals = [self.hor.feet.get(), self.hor.inch.get(), self.hor.frac.get(),
         self.vert.feet.get(), self.vert.inch.get(), self.vert.frac.get()]
 
-        print(self.vals)
-
     def check_numeric(self):
         for i in range(0,6):
             if self.vals[i]:
@@ -79,25 +78,36 @@ class Application(tk.Tk):
                     self.vals[i] = int(self.vals[i])
             else:
                 self.vals[i] = int(0)
-            
-        print(self.vals)
+
         return True
     
     def check_size(self):
         self.horizontal_len, self.vertical_len = self.combine_vals()
+        too_large = False
+        message = ""
+
         if self.horizontal_len > config.MAX_HORIZONTAL and self.vertical_len > config.MAX_VERTICAL:
-            self.logger.info(f"\nHorizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}\nVertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
-            print("Horizontal and vertical cuts are too large")
+            message = (f"\nBoth cutss are too large:\n"
+                        f"Horizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}\n"
+                        f"Vertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
+            too_large = True
         elif self.horizontal_len > config.MAX_HORIZONTAL:
-            self.logger.info(f"\nHorizontal: {self.horizontal_len} is greater than {config.MAX_HORIZONTAL}")
-            print("Horizontal cut is too large")
+            message = (f"\nHorizontal cut is too large:\n{self.horizontal_len} > {config.MAX_HORIZONTAL}")
+            too_large = True
         elif self.vertical_len > config.MAX_VERTICAL:
-            self.logger.info(f"\nVertical: {self.vertical_len} is greater than {config.MAX_VERTICAL}")
-            print("Vertical cut is too large.")
+            message = (f"\nVertical cut is too large:\n{self.vertical_len} > {config.MAX_VERTICAL}")
+            too_large = True
+        
+        if too_large:
+            self.logger.info(message)
+
         else:
-            self.logger.info(f"\nHorizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\nVertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
-            print("Horizontal cut length: ", self.horizontal_len/12, "ft (", self.horizontal_len, "in)")
-            print("Vertical cut length: ", self.vertical_len/12, "ft (", self.vertical_len, "in)")
+            message = (f"\nHorizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
+                       f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+        
+        print(message)
+        messagebox.showwarning("Cut Size Warning", message)
+            
 
     def combine_vals(self):
         hor_len = self.vals[0] * 12 + self.vals[1] + self.vals[2] * (1/16)
