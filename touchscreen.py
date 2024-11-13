@@ -88,8 +88,7 @@ class Application(tk.Tk):
         self.confirmation_window.columnconfigure(1, weight=1)
         self.confirmation_window.rowconfigure(0, weight=1)
         self.confirmation_window.rowconfigure(1, weight=1)
-        self.confirmation_window.rowconfigure(2, weight=1)
-        self.confirmation_window.rowconfigure(3, weight=1)
+        self.confirmation_window.rowconfigure(2, weight=3)
 
         question_label = ttk.Label(self.confirmation_window, text="Is this the correct cut?", font="Arial 32", anchor='center')
         question_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
