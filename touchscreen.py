@@ -68,6 +68,7 @@ class Application(tk.Tk):
 
         if self.confirmation_response:
             self.show_progress()
+            messagebox.showinfo(self.cut_title, self.cut_message)
         else:
             title = "Cut Canceled"
             message = "The cut has been canceled."
@@ -133,8 +134,8 @@ class Application(tk.Tk):
         threading.Thread(target=self.cut).start()
 
     def cut(self):
-        title = ""
-        message = ""
+        self.cut_title = ""
+        self.cut_message = ""
         for i in range(50):
             if self.cancel_flag:
                 break
@@ -142,21 +143,17 @@ class Application(tk.Tk):
                 self.progress_bar.step(2)
             time.sleep(0.1)
         if self.cancel_flag:
-            title = "Cut Canceled"
-            message = "The cut has been canceled without completing."
+            self.cut_title = "Cut Canceled"
+            self.cut_message = "The cut has been canceled without completing."
         else:
-            title = "Cut Completed"
-            message = "The cut has been completed successfully"
-        self.finish_cut(title, message)
+            self.cut_title = "Cut Completed"
+            self.cut_message = "The cut has been completed successfully"
+        self.progress_window.destroy()
 
 
     def cancel_process(self):
         self.cancel_flag = True
-        
 
-    def finish_cut(self, title, message):
-        self.progress_window.destroy()
-        messagebox.showinfo(title, message)
      
         
     def validate_inputs(self):
