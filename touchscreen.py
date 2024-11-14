@@ -3,6 +3,7 @@ import config
 import requests
 import threading
 import time
+import progress_window
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
@@ -11,8 +12,6 @@ from io import BytesIO
 
 
 def init_touchscreen(logger):
-    global root
-
     app = Application(logger)
     app.mainloop()
 
@@ -21,8 +20,15 @@ class Application(tk.Tk):
     def __init__(self, logger):
         super().__init__()
 
+        self.screen_size = [self.winfo_screenwidth(), self.winfo_screenheight()]
+
+        self.message = (f"Horizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
+                       f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+
         self.logger = logger
         self.logger.info("Archimedes initialized")
+
+        self.progress_window = progress_window.ProgressWindow(self.logger, self.message, self.screen_size)
 
         self.title("Archimedes")
 
@@ -66,19 +72,14 @@ class Application(tk.Tk):
             self.wait_window(self.confirmation_window)
 
             if self.confirmation_response:
-                self.show_progress()
+                print("progress window")
             else:
-                title = "Cut Canceled"
-                message = "The cut has been canceled."
-                messagebox.showinfo(title, message)
+                messagebox.showinfo("Cut Canceled", "The cut has been canceled.")
 
         self.clear_entries()
         self.keyboard.reset_entry()
 
     def confirm_cuts(self):
-        message = (f"Horizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
-                       f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
-
         self.confirmation_window = tk.Toplevel(self)
         self.confirmation_window.attributes("-topmost", True)
         self.confirmation_window.attributes("-fullscreen", True)
@@ -93,7 +94,7 @@ class Application(tk.Tk):
         question_label = ttk.Label(self.confirmation_window, text="Is this the correct cut?", font="Arial 32", anchor='center')
         question_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        cut_length = ttk.Label(self.confirmation_window, text=message, font="Arial 24", anchor='center')
+        cut_length = ttk.Label(self.confirmation_window, text=self.message, font="Arial 24", anchor='center')
         cut_length.grid(row=1, column=0, columnspan=2, sticky="nsew")
 
         confirmation_button = ttk.Button(self.confirmation_window, text="Confirm", command=lambda: self.confirmation_result(True))
@@ -107,69 +108,6 @@ class Application(tk.Tk):
         self.logger.info(f"Cut confirmation response: {response}")
         self.confirmation_response = response
         self.confirmation_window.destroy()
-        
-
-    def show_progress(self):
-        self.cancel_flag = False
-        
-        message = (f"\nHorizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
-                       f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
-
-        self.progress_window = tk.Toplevel(self)
-        self.progress_window.attributes("-topmost", True)
-        self.progress_window.attributes("-fullscreen", True)
-        self.progress_window.title("Cutting")
-
-        self.progress_window.columnconfigure(0, weight=1)
-
-        self.progress_window.rowconfigure(0, weight=1)
-        self.progress_window.rowconfigure(1, weight=1)
-        self.progress_window.rowconfigure(2, weight=1)
-        self.progress_window.rowconfigure(3, weight=3)
-
-        progress_label = ttk.Label(self.progress_window, text="Cutting Board", font="Arial 32", anchor="center")
-        progress_label.grid(row=0, column=0, sticky="nsew")
-
-        cut_length = ttk.Label(self.progress_window, text=message, font="Arial 24", anchor="center")
-        cut_length.grid(row=1, column=0, sticky="nsew")
-
-        self.progress_bar = ttk.Progressbar(self.progress_window, maximum=100)
-        self.progress_bar.grid(row=2, column=0, sticky="nsew")
-
-        cancel_button = ttk.Button(self.progress_window, text="Cancel Cut", command=lambda: self.cancel_process())
-        cancel_button.grid(row=3, column=0, sticky="nsew")
-
-        threading.Thread(target=self.cut).start()
-        self.logger.info("Cut Starting")
-
-    def cut(self):
-        title = ""
-        message = ""
-        for i in range(50):
-            if self.cancel_flag:
-                break
-            else:
-                self.progress_bar.step(2)
-            time.sleep(0.1)
-        if self.cancel_flag:
-            title = "Cut Canceled"
-            message = "The cut has been canceled manually."
-            self.logger.info(f"{title} - {message}")
-        else:
-            title = "Cut Completed"
-            message = "The cut has been completed successfully."
-            self.logger.info(f"{title} - {message}")
-        self.finish_cut(title, message)
-
-
-    def cancel_process(self):
-        self.cancel_flag = True
-        
-
-    def finish_cut(self, title, message):
-        self.progress_window.destroy()
-        messagebox.showinfo(title, message)
-     
         
     def validate_inputs(self):
         self.valid_inputs = False
@@ -204,40 +142,40 @@ class Application(tk.Tk):
     def check_size(self):
         self.horizontal_len, self.vertical_len = self.combine_vals()
         self.bad_cut_length = False
-        message = ""
+        warning_message = ""
 
         if self.horizontal_len > config.MAX_HORIZONTAL:
-            message += (f"\nHorizontal cut is too large:\n"
+            warning_message += (f"\nHorizontal cut is too large:\n"
                        f"Max Horizontal Cut: {config.MAX_HORIZONTAL/12} ft ({config.MAX_HORIZONTAL} in)\n"
                        f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n")
             self.bad_cut_length = True
         
         if self.horizontal_len < config.MIN_HORIZONTAL:
-            message += (f"\nHorizontal cut is too small:\n"
+            warning_message += (f"\nHorizontal cut is too small:\n"
                        f"Min Horizontal Cut: {config.MIN_HORIZONTAL/12} ft ({config.MIN_HORIZONTAL} in)\n"
                        f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n")
             self.bad_cut_length = True
 
         if self.vertical_len > config.MAX_VERTICAL:
-            message += (f"\nVertical cut is too large:\n"
+            warning_message += (f"\nVertical cut is too large:\n"
                        f"Max Vertical Cut: {config.MAX_VERTICAL/12} ft ({config.MAX_VERTICAL} in)\n"
                        f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)\n")
             self.bad_cut_length = True
                 
         if self.vertical_len < config.MIN_VERTICAL:
-            message += (f"\nVertical cut is too small:\n"
+            warning_message += (f"\nVertical cut is too small:\n"
                        f"Min Vertical Cut: {config.MIN_VERTICAL/12} ft ({config.MIN_VERTICAL} in)\n"
                        f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)\n")
             self.bad_cut_length = True
 
         if self.bad_cut_length:
-            messagebox.showwarning("Cut Size Warning", message)
+            messagebox.showwarning("Cut Size Warning", warning_message)
 
         else:
-            message = (f"Horizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in) - Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+            warning_message = (f"Horizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in) - Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
         
-        self.logger.info(message)
-        print(message)
+        self.logger.info(warning_message)
+        print(warning_message)
             
 
     def combine_vals(self):
@@ -246,7 +184,6 @@ class Application(tk.Tk):
 
         return hor_len, ver_len
     
-    #Method to clear text entries after the send cut button has been pressed
     def clear_entries(self):
         for input_measure in [self.hor, self.vert]:
             input_measure.feet.delete(0, tk.END)

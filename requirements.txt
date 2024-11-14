@@ -1,5 +1,5 @@
 For this project you will need to import the following libraries:
--pyserial
+-pyserial - To install pyserial use the command: pip install pyserial
 -tkinter
 
-To install pyserial use the command: pip install pyserial
+
