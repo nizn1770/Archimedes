@@ -26,9 +26,6 @@ class Application(tk.Tk):
 
         self.title("Archimedes")
 
-        self.cut_message = 'test'
-        self.cut_title = 'test'
-
         self.attributes("-fullscreen", True)
         self.bind("<Escape>", self.exit_fullscreen)
         self.bind("Q", self.quit_program)
@@ -140,17 +137,17 @@ class Application(tk.Tk):
     def cut(self):
         for i in range(50):
             if self.cancel_flag:
-                self.cut_title = "Cut Canceled"
-                self.cut_message = "The cut has been canceled without completing."
+                cut_title = "Cut Canceled"
+                cut_message = "The cut has been canceled without completing."
                 break
             else:
                 self.progress_bar.step(2)
             time.sleep(0.1)
         if not self.cancel_flag:
-            self.cut_title = "Cut Completed"
-            self.cut_message = "The cut has been completed successfully"
+            cut_title = "Cut Completed"
+            cut_message = "The cut has been completed successfully"
         self.after(0, self.progress_window.destroy)
-        messagebox.showinfo(self.cut_title, self.cut_message)
+        messagebox.showinfo(cut_title, cut_message)
 
 
     def cancel_process(self):
