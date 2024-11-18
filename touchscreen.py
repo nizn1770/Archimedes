@@ -65,12 +65,13 @@ class Application(tk.Tk):
 
             self.wait_window(self.confirmation_window)
 
-            if self.confirmation_response:
-                self.show_progress()
-            else:
-                title = "Cut Canceled"
-                message = "The cut has been canceled."
-                messagebox.showinfo(title, message)
+        if self.confirmation_response:
+            self.show_progress()
+            
+        else:
+            title = "Cut Canceled"
+            message = "The cut has been canceled."
+            messagebox.showinfo(title, message)
 
         self.clear_entries()
         self.keyboard.reset_entry()
@@ -143,32 +144,25 @@ class Application(tk.Tk):
         self.logger.info("Cut Starting")
 
     def cut(self):
-        title = ""
-        message = ""
         for i in range(50):
             if self.cancel_flag:
+                cut_title = "Cut Canceled"
+                cut_message = "The cut has been canceled without completing."
                 break
             else:
                 self.progress_bar.step(2)
             time.sleep(0.1)
-        if self.cancel_flag:
-            title = "Cut Canceled"
-            message = "The cut has been canceled manually."
-            self.logger.info(f"{title} - {message}")
-        else:
-            title = "Cut Completed"
-            message = "The cut has been completed successfully."
-            self.logger.info(f"{title} - {message}")
-        self.finish_cut(title, message)
+        if not self.cancel_flag:
+            cut_title = "Cut Completed"
+            cut_message = "The cut has been completed successfully"
+        self.logger.info(f"{cut_title} - {cut_message}")
+        self.after(0, self.progress_window.destroy)
+        messagebox.showinfo(cut_title, cut_message)
 
 
     def cancel_process(self):
         self.cancel_flag = True
-        
 
-    def finish_cut(self, title, message):
-        self.progress_window.destroy()
-        messagebox.showinfo(title, message)
      
         
     def validate_inputs(self):
