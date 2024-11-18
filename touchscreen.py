@@ -26,6 +26,9 @@ class Application(tk.Tk):
 
         self.title("Archimedes")
 
+        self.cut_message = 'test'
+        self.cut_title = 'test'
+
         self.attributes("-fullscreen", True)
         self.bind("<Escape>", self.exit_fullscreen)
         self.bind("Q", self.quit_program)
@@ -68,7 +71,7 @@ class Application(tk.Tk):
 
         if self.confirmation_response:
             self.show_progress()
-            messagebox.showinfo(self.cut_title, self.cut_message)
+            
         else:
             title = "Cut Canceled"
             message = "The cut has been canceled."
@@ -131,24 +134,24 @@ class Application(tk.Tk):
         cancel_button = ttk.Button(self.progress_window, text="Cancel Cut", command=lambda: self.cancel_process())
         cancel_button.pack(pady=10)
 
-        threading.Thread(target=self.cut).start()
+        self.cut_thread = threading.Thread(target=self.cut)
+        self.cut_thread.start()
 
     def cut(self):
-        self.cut_title = ""
-        self.cut_message = ""
         for i in range(50):
             if self.cancel_flag:
+                self.cut_title = "Cut Canceled"
+                self.cut_message = "The cut has been canceled without completing."
                 break
             else:
                 self.progress_bar.step(2)
             time.sleep(0.1)
-        if self.cancel_flag:
-            self.cut_title = "Cut Canceled"
-            self.cut_message = "The cut has been canceled without completing."
-        else:
+        if not self.cancel_flag:
             self.cut_title = "Cut Completed"
             self.cut_message = "The cut has been completed successfully"
-        self.progress_window.destroy()
+        print(f"Title: {self.cut_title}, Message: {self.cut_message}")
+        self.after(0, self.progress_window.destroy)
+        messagebox.showinfo(self.cut_title, self.cut_message)
 
 
     def cancel_process(self):
