@@ -149,7 +149,6 @@ class Application(tk.Tk):
         if not self.cancel_flag:
             self.cut_title = "Cut Completed"
             self.cut_message = "The cut has been completed successfully"
-        print(f"Title: {self.cut_title}, Message: {self.cut_message}")
         self.after(0, self.progress_window.destroy)
         messagebox.showinfo(self.cut_title, self.cut_message)
 
