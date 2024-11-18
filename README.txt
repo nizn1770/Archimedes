@@ -1,4 +1,5 @@
 Known bugs:
+- key binds work in all windows
 
 UI fixes:
 - "fraction" verbiage
