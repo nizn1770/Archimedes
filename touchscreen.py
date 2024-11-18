@@ -65,13 +65,13 @@ class Application(tk.Tk):
 
             self.wait_window(self.confirmation_window)
 
-        if self.confirmation_response:
-            self.show_progress()
-            
-        else:
-            title = "Cut Canceled"
-            message = "The cut has been canceled."
-            messagebox.showinfo(title, message)
+            if self.confirmation_response:
+                self.show_progress()
+                
+            else:
+                title = "Cut Canceled"
+                message = "The cut has been canceled."
+                messagebox.showinfo(title, message)
 
         self.clear_entries()
         self.keyboard.reset_entry()
