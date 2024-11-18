@@ -14,5 +14,7 @@ UI fixes:
 
 Features to be added:
 - CSV file with date/time, horizontal length, vertical length
+- add button to shutdown the entire rasp pi
+- Make individual files instead of all in touchscreen
 
 
