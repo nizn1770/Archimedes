@@ -1,11 +1,10 @@
 Known bugs:
 - key binds work in all windows
+    - don't know that we need it in all
+- can only get to feet by clicking delete to move backwards, clicking text box will highlight, but then text entry will go to previous active_entry
+    - might be as simple as removing the feet all together
 
 UI fixes:
-- "fraction" verbiage
-- focus on inches from the start
-- jump from inches to fraction to inches to fraction
-- deal with 1/8" not 1/16"
 - make text and textbox bigger
 - make screen full screen on progress_window
 - make cancel button bigger on progress_window

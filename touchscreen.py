@@ -39,7 +39,7 @@ class Application(tk.Tk):
         
         self.hor = InputMeasure(self, "Horizontal")
         self.hor.grid(row=0, column=0, sticky="nsew")
-        self.hor.feet.focus_set()
+        self.hor.inch.focus_set()
 
         self.vert = InputMeasure(self, "Vertical")
         self.vert.grid(row=1, column=0, sticky="nsew")
@@ -235,8 +235,8 @@ class Application(tk.Tk):
             
 
     def combine_vals(self):
-        hor_len = self.vals[0] * 12 + self.vals[1] + self.vals[2] * (1/16)
-        ver_len = self.vals[3] * 12 + self.vals[4] + self.vals[5] * (1/16)
+        hor_len = self.vals[0] * 12 + self.vals[1] + self.vals[2] * (1/8)
+        ver_len = self.vals[3] * 12 + self.vals[4] + self.vals[5] * (1/8)
 
         return hor_len, ver_len
     
@@ -277,7 +277,7 @@ class InputMeasure(ttk.Frame):
         self.frac = ttk.Entry(self, font=('Arial 12'))
         self.frac.grid(row=1, column=2, sticky="ew")
 
-        self.frac_label = ttk.Label(self, text="Fraction", font=('Arial 12'))
+        self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial 12'))
         self.frac_label.grid(row=2, column=2, sticky="n")
 
 class KeyBoard(ttk.Frame):
@@ -285,7 +285,7 @@ class KeyBoard(ttk.Frame):
         super().__init__(parent)
         
         self.input_measures = input_measures
-        self.active_entry = input_measures[0].feet
+        self.active_entry = input_measures[0].inch
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -353,7 +353,7 @@ class KeyBoard(ttk.Frame):
             self.switch_entry_back()
 
     def reset_entry(self):
-        self.active_entry = self.input_measures[0].feet
+        self.active_entry = self.input_measures[0].inch
         self.active_entry.focus_set()
 
     def switch_entry(self):
@@ -362,13 +362,13 @@ class KeyBoard(ttk.Frame):
         elif self.active_entry == self.input_measures[0].inch:
             self.active_entry = self.input_measures[0].frac
         elif self.active_entry == self.input_measures[0].frac:
-            self.active_entry = self.input_measures[1].feet  
+            self.active_entry = self.input_measures[1].inch  
         elif self.active_entry == self.input_measures[1].feet:
             self.active_entry = self.input_measures[1].inch
         elif self.active_entry == self.input_measures[1].inch:
             self.active_entry = self.input_measures[1].frac
         else:
-            self.active_entry = self.input_measures[0].feet  
+            self.active_entry = self.input_measures[0].inch  
 
         self.active_entry.focus_set()
 
