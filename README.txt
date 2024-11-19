@@ -1,8 +1,7 @@
 Known bugs:
 - key binds work in all windows
     - don't know that we need it in all
-- can only get to feet by clicking delete to move backwards, clicking text box will highlight, but then text entry will go to previous active_entry
-    - might be as simple as removing the feet all together
+
 
 UI fixes:
 - make text and textbox bigger

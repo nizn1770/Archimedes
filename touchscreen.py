@@ -235,18 +235,14 @@ class Application(tk.Tk):
             
 
     def combine_vals(self):
-        # hor_len = self.vals[0] * 12 + self.vals[1] + self.vals[2] * (1/8)
-        # ver_len = self.vals[3] * 12 + self.vals[4] + self.vals[5] * (1/8)
-
         hor_len = self.vals[0] + self.vals[1] * (1/8)
         ver_len = self.vals[2] + self.vals[3] * (1/8)
 
         return hor_len, ver_len
     
-    #Method to clear text entries after the send cut button has been pressed
+
     def clear_entries(self):
         for input_measure in [self.hor, self.vert]:
-            #input_measure.feet.delete(0, tk.END)
             input_measure.inch.delete(0, tk.END)
             input_measure.frac.delete(0, tk.END)
 
@@ -256,35 +252,23 @@ class InputMeasure(ttk.Frame):
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
-        #self.columnconfigure(2, weight=1)
 
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
 
-        #switch colspan to 3
         self.title = ttk.Label(self, text=title_text, font=('Arial 16'))
         self.title.grid(row=0, column=0, columnspan=2, sticky="ew")
 
-        # self.feet = ttk.Entry(self, font=('Arial 12'))
-        # self.feet.grid(row=1, column=0, sticky="ew")
-
-        # self.feet_label = ttk.Label(self, text="Feet", font=('Arial 12'))
-        # self.feet_label.grid(row=2, column=0, sticky="n")
-
-        #switch column to 1
         self.inch = ttk.Entry(self, font=('Arial 12'))
         self.inch.grid(row=1, column=0, sticky="ew")
 
-        #switch column to 1
         self.inch_label = ttk.Label(self, text="Inches", font=('Arial 12'))
         self.inch_label.grid(row=2, column=0, sticky="n")
 
-        #switch column to 2
         self.frac = ttk.Entry(self, font=('Arial 12'))
         self.frac.grid(row=1, column=1, sticky="ew")
 
-        #switch column to 2
         self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial 12'))
         self.frac_label.grid(row=2, column=1, sticky="n")
 
@@ -365,14 +349,10 @@ class KeyBoard(ttk.Frame):
         self.active_entry.focus_set()
 
     def switch_entry(self):
-        # if self.active_entry == self.input_measures[0].feet:
-        #     self.active_entry = self.input_measures[0].inch
         if self.active_entry == self.input_measures[0].inch:
             self.active_entry = self.input_measures[0].frac
         elif self.active_entry == self.input_measures[0].frac:
-            self.active_entry = self.input_measures[1].inch  
-        # elif self.active_entry == self.input_measures[1].feet:
-        #     self.active_entry = self.input_measures[1].inch
+            self.active_entry = self.input_measures[1].inch
         elif self.active_entry == self.input_measures[1].inch:
             self.active_entry = self.input_measures[1].frac
         else:
@@ -381,14 +361,10 @@ class KeyBoard(ttk.Frame):
         self.active_entry.focus_set()
 
     def switch_entry_back(self):
-        # if self.active_entry == self.input_measures[0].feet:
-        #     self.active_entry = self.input_measures[1].frac
         if self.active_entry == self.input_measures[0].inch:
             self.active_entry = self.input_measures[1].frac
         elif self.active_entry == self.input_measures[0].frac:
             self.active_entry = self.input_measures[0].inch 
-        # elif self.active_entry == self.input_measures[1].feet:
-        #     self.active_entry = self.input_measures[0].frac
         elif self.active_entry == self.input_measures[1].inch:
             self.active_entry = self.input_measures[0].frac
         else:
