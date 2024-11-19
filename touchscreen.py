@@ -77,8 +77,8 @@ class Application(tk.Tk):
         self.keyboard.reset_entry()
 
     def confirm_cuts(self):
-        message = (f"Horizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
-                       f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+        message = (f"Horizontal: {self.horizontal_len} in\n"
+                       f"Vertical: {self.vertical_len} in")
 
         self.confirmation_window = tk.Toplevel(self)
         self.confirmation_window.attributes("-topmost", True)
@@ -113,8 +113,8 @@ class Application(tk.Tk):
     def show_progress(self):
         self.cancel_flag = False
         
-        message = (f"\nHorizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n"
-                       f"Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+        message = (f"\nHorizontal: {self.horizontal_len} in\n"
+                       f"Vertical: {self.vertical_len} in")
 
         self.progress_window = tk.Toplevel(self)
         self.progress_window.attributes("-topmost", True)
@@ -178,13 +178,13 @@ class Application(tk.Tk):
 
 
     def get_vals(self):
-        self.vals = [self.hor.feet.get(), self.hor.inch.get(), self.hor.frac.get(),
-        self.vert.feet.get(), self.vert.inch.get(), self.vert.frac.get()]
+        self.vals = [self.hor.inch.get(), self.hor.frac.get(),
+        self.vert.inch.get(), self.vert.frac.get()]
 
 
     def check_numeric(self):
         self.numeric = True
-        for i in range(0,6):
+        for i in range(0,4):
             if self.vals[i]:
                 if not self.vals[i].isnumeric():
                     self.logger.info(f"Invalid value: {self.vals[i]}")
@@ -202,48 +202,51 @@ class Application(tk.Tk):
 
         if self.horizontal_len > config.MAX_HORIZONTAL:
             message += (f"\nHorizontal cut is too large:\n"
-                       f"Max Horizontal Cut: {config.MAX_HORIZONTAL/12} ft ({config.MAX_HORIZONTAL} in)\n"
-                       f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n")
+                       f"Max Horizontal Cut: {config.MAX_HORIZONTAL} in\n"
+                       f"Input Horizontal Cut: {self.horizontal_len} in\n")
             self.bad_cut_length = True
         
         if self.horizontal_len < config.MIN_HORIZONTAL:
             message += (f"\nHorizontal cut is too small:\n"
-                       f"Min Horizontal Cut: {config.MIN_HORIZONTAL/12} ft ({config.MIN_HORIZONTAL} in)\n"
-                       f"Input Horizontal Cut: {self.horizontal_len/12} ft ({self.horizontal_len} in)\n")
+                       f"Min Horizontal Cut: {config.MIN_HORIZONTAL} in\n"
+                       f"Input Horizontal Cut: {self.horizontal_len} in\n")
             self.bad_cut_length = True
 
         if self.vertical_len > config.MAX_VERTICAL:
             message += (f"\nVertical cut is too large:\n"
-                       f"Max Vertical Cut: {config.MAX_VERTICAL/12} ft ({config.MAX_VERTICAL} in)\n"
-                       f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)\n")
+                       f"Max Vertical Cut: {config.MAX_VERTICAL} in)\n"
+                       f"Input Vertical Cut: {self.vertical_len} in)\n")
             self.bad_cut_length = True
                 
         if self.vertical_len < config.MIN_VERTICAL:
             message += (f"\nVertical cut is too small:\n"
-                       f"Min Vertical Cut: {config.MIN_VERTICAL/12} ft ({config.MIN_VERTICAL} in)\n"
-                       f"Input Vertical Cut: {self.vertical_len/12} ft ({self.vertical_len} in)\n")
+                       f"Min Vertical Cut: {config.MIN_VERTICAL} in\n"
+                       f"Input Vertical Cut: {self.vertical_len} in\n")
             self.bad_cut_length = True
 
         if self.bad_cut_length:
             messagebox.showwarning("Cut Size Warning", message)
 
         else:
-            message = (f"Horizontal: {self.horizontal_len/12} ft ({self.horizontal_len} in) - Vertical: {self.vertical_len/12} ft ({self.vertical_len} in)")
+            message = (f"Horizontal: {self.horizontal_len} in, Vertical: {self.vertical_len} in")
         
         self.logger.info(message)
         print(message)
             
 
     def combine_vals(self):
-        hor_len = self.vals[0] * 12 + self.vals[1] + self.vals[2] * (1/8)
-        ver_len = self.vals[3] * 12 + self.vals[4] + self.vals[5] * (1/8)
+        # hor_len = self.vals[0] * 12 + self.vals[1] + self.vals[2] * (1/8)
+        # ver_len = self.vals[3] * 12 + self.vals[4] + self.vals[5] * (1/8)
+
+        hor_len = self.vals[0] + self.vals[1] * (1/8)
+        ver_len = self.vals[2] + self.vals[3] * (1/8)
 
         return hor_len, ver_len
     
     #Method to clear text entries after the send cut button has been pressed
     def clear_entries(self):
         for input_measure in [self.hor, self.vert]:
-            input_measure.feet.delete(0, tk.END)
+            #input_measure.feet.delete(0, tk.END)
             input_measure.inch.delete(0, tk.END)
             input_measure.frac.delete(0, tk.END)
 
@@ -253,32 +256,37 @@ class InputMeasure(ttk.Frame):
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
+        #self.columnconfigure(2, weight=1)
 
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
 
+        #switch colspan to 3
         self.title = ttk.Label(self, text=title_text, font=('Arial 16'))
-        self.title.grid(row=0, column=0, columnspan=3, sticky="ew")
+        self.title.grid(row=0, column=0, columnspan=2, sticky="ew")
 
-        self.feet = ttk.Entry(self, font=('Arial 12'))
-        self.feet.grid(row=1, column=0, sticky="ew")
+        # self.feet = ttk.Entry(self, font=('Arial 12'))
+        # self.feet.grid(row=1, column=0, sticky="ew")
 
-        self.feet_label = ttk.Label(self, text="Feet", font=('Arial 12'))
-        self.feet_label.grid(row=2, column=0, sticky="n")
+        # self.feet_label = ttk.Label(self, text="Feet", font=('Arial 12'))
+        # self.feet_label.grid(row=2, column=0, sticky="n")
 
+        #switch column to 1
         self.inch = ttk.Entry(self, font=('Arial 12'))
-        self.inch.grid(row=1, column=1, sticky="ew")
+        self.inch.grid(row=1, column=0, sticky="ew")
 
+        #switch column to 1
         self.inch_label = ttk.Label(self, text="Inches", font=('Arial 12'))
-        self.inch_label.grid(row=2, column=1, sticky="n")
+        self.inch_label.grid(row=2, column=0, sticky="n")
 
+        #switch column to 2
         self.frac = ttk.Entry(self, font=('Arial 12'))
-        self.frac.grid(row=1, column=2, sticky="ew")
+        self.frac.grid(row=1, column=1, sticky="ew")
 
+        #switch column to 2
         self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial 12'))
-        self.frac_label.grid(row=2, column=2, sticky="n")
+        self.frac_label.grid(row=2, column=1, sticky="n")
 
 class KeyBoard(ttk.Frame):
     def __init__(self, parent, input_measures):
@@ -357,14 +365,14 @@ class KeyBoard(ttk.Frame):
         self.active_entry.focus_set()
 
     def switch_entry(self):
-        if self.active_entry == self.input_measures[0].feet:
-            self.active_entry = self.input_measures[0].inch
-        elif self.active_entry == self.input_measures[0].inch:
+        # if self.active_entry == self.input_measures[0].feet:
+        #     self.active_entry = self.input_measures[0].inch
+        if self.active_entry == self.input_measures[0].inch:
             self.active_entry = self.input_measures[0].frac
         elif self.active_entry == self.input_measures[0].frac:
             self.active_entry = self.input_measures[1].inch  
-        elif self.active_entry == self.input_measures[1].feet:
-            self.active_entry = self.input_measures[1].inch
+        # elif self.active_entry == self.input_measures[1].feet:
+        #     self.active_entry = self.input_measures[1].inch
         elif self.active_entry == self.input_measures[1].inch:
             self.active_entry = self.input_measures[1].frac
         else:
@@ -373,16 +381,16 @@ class KeyBoard(ttk.Frame):
         self.active_entry.focus_set()
 
     def switch_entry_back(self):
-        if self.active_entry == self.input_measures[0].feet:
+        # if self.active_entry == self.input_measures[0].feet:
+        #     self.active_entry = self.input_measures[1].frac
+        if self.active_entry == self.input_measures[0].inch:
             self.active_entry = self.input_measures[1].frac
-        elif self.active_entry == self.input_measures[0].inch:
-            self.active_entry = self.input_measures[0].feet
         elif self.active_entry == self.input_measures[0].frac:
             self.active_entry = self.input_measures[0].inch 
-        elif self.active_entry == self.input_measures[1].feet:
-            self.active_entry = self.input_measures[0].frac
+        # elif self.active_entry == self.input_measures[1].feet:
+        #     self.active_entry = self.input_measures[0].frac
         elif self.active_entry == self.input_measures[1].inch:
-            self.active_entry = self.input_measures[1].feet
+            self.active_entry = self.input_measures[0].frac
         else:
             self.active_entry = self.input_measures[1].inch 
 

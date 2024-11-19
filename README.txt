@@ -10,6 +10,7 @@ UI fixes:
 - make cancel button bigger on progress_window
 - make screen full screen on confirm_window
 - remove print statements to console
+- want to print out as fraction
 
 Features to be added:
 - CSV file with date/time, horizontal length, vertical length
