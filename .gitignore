@@ -2,5 +2,7 @@ __pycache__/cnc_control.cpython-311.pyc
 __pycache__/config.cpython-311.pyc
 __pycache__/logger.cpython-311.pyc
 __pycache__/touchscreen.cpython-311.pyc
+__pycache__/progress_window.cpython-311.pyc
 logs/app.log
 utils/__pycache__/logging_config.cpython-311.pyc
+__pycache__/progress_window.cpython-311.pyc

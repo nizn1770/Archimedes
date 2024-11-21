@@ -8,7 +8,8 @@ def main():
 
     utils.logging_config.init_logging()
     logger.info("Archimedes started.")
-    touchscreen.init_touchscreen(logger)
+    app = touchscreen.Application(logger)
+    app.mainloop()
 
 
 
