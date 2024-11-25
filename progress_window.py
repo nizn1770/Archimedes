@@ -49,6 +49,7 @@ class ProgressWindow:
         self.progress_window.withdraw()
 
     def begin_progress(self):
+        self.cancel_flag = False
         threading.Thread(target=self.cut).start()
         self.logger.info("Starting Cut") 
 
