@@ -50,6 +50,7 @@ class ProgressWindow:
 
     def begin_progress(self):
         self.cancel_flag = False
+        self.progress_bar["value"]=0
         threading.Thread(target=self.cut).start()
         self.logger.info("Starting Cut") 
 
@@ -68,6 +69,7 @@ class ProgressWindow:
         self.logger.info(f"{cut_title} - {cut_message}")
         self.progress_window.after(0, self.hide_progress_window)
         messagebox.showinfo(cut_title, cut_message)
+
 
 
     def cancel_process(self):
