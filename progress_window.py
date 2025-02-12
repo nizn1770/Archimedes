@@ -57,19 +57,21 @@ class ProgressWindow:
     def cut(self):
         for i in range(50):
             if self.cancel_flag:
-                cut_title = "Cut Canceled"
-                cut_message = "The cut has been canceled without completing."
+                self.cut_title = "Cut Canceled"
+                self.cut_message = "The cut has been canceled without completing."
                 break
             else:
                 self.progress_bar.step(2)
             time.sleep(0.1)
         if not self.cancel_flag:
-            cut_title = "Cut Completed"
-            cut_message = "The cut has been completed successfully"
-        self.logger.info(f"{cut_title} - {cut_message}")
-        self.progress_window.after(0, self.hide_progress_window)
-        messagebox.showinfo(cut_title, cut_message)
-
+            self.cut_title = "Cut Completed"
+            self.cut_message = "The cut has been completed successfully"
+        self.logger.info(f"{self.cut_title} - {self.cut_message}")
+        print("done")
+        self.hide_progress_window()
+        
+    def get_cut_message(self):
+        return self.cut_title, self.cut_message
 
 
     def cancel_process(self):

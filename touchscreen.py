@@ -75,6 +75,8 @@ class Application(tk.Tk):
             if self.confirmation_response:
                 self.progress_window.show_progress_window()
                 self.progress_window.begin_progress()
+                cut_title, cut_message = self.progress_window.get_cut_message()
+                messagebox.showinfo(cut_title, cut_message)
                 
             else:
                 title = "Cut Canceled"
