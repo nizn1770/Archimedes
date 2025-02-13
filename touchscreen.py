@@ -22,6 +22,8 @@ class Application(tk.Tk):
         self.vals = [0,0,0,0]
 
         self.message_var = tk.StringVar(value="test")
+        self.cut_title = "test"
+        self.cut_message = "test"
         
         self.title("Archimedes")
 
@@ -73,6 +75,7 @@ class Application(tk.Tk):
 
             if self.confirmation_response:
                 self.show_progress()
+                self.wait_window(self.progress_window)
                 messagebox.showinfo(self.cut_title, self.cut_message)
                 
             else:
@@ -84,12 +87,6 @@ class Application(tk.Tk):
         self.keyboard.reset_entry()
 
     def confirm_cuts(self):
-<<<<<<< HEAD
-=======
-        message = (f"Horizontal: {self.horizontal_len} in\n"
-                       f"Vertical: {self.vertical_len} in")
-
->>>>>>> parent of dd1eac4 (UI FIX)
         self.confirmation_window = tk.Toplevel(self)
         self.confirmation_window.attributes("-topmost", True)
         self.confirmation_window.attributes("-fullscreen", True)
@@ -122,12 +119,6 @@ class Application(tk.Tk):
 
     def show_progress(self):        
         self.cancel_flag = False
-<<<<<<< HEAD
-=======
-        
-        message = (f"\nHorizontal: {self.horizontal_len} in\n"
-                       f"Vertical: {self.vertical_len} in")
->>>>>>> parent of dd1eac4 (UI FIX)
 
         self.progress_window = tk.Toplevel(self)
         self.progress_window.attributes("-topmost", True)
@@ -252,6 +243,18 @@ class Application(tk.Tk):
         self.logger.info(message)
         print(message)
             
+
+
+    def make_hor_printout(self):
+        hor_len = f"{self.vals[0]} {self.vals[1]}/8"
+
+        return hor_len
+    
+    def make_ver_printout(self):
+        ver_len = f"{self.vals[2]} {self.vals[3]}/8"
+
+        return ver_len
+    
 
     def combine_vals(self):
         hor_len = self.vals[0] + self.vals[1] * (1/8)
