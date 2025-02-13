@@ -23,8 +23,6 @@ class Application(tk.Tk):
 
         self.message_var = tk.StringVar(value="test")
         
-        self.progress_window = progress_window.ProgressWindow(self, self.logger, self.message_var)
-
         self.title("Archimedes")
 
         self.attributes("-fullscreen", True)
@@ -60,6 +58,7 @@ class Application(tk.Tk):
     def update_message(self, message):
         self.message_var.set(message)
 
+
     def send_cuts(self):
         self.validate_inputs()
         if self.valid_inputs:
@@ -73,10 +72,8 @@ class Application(tk.Tk):
             self.wait_window(self.confirmation_window)
 
             if self.confirmation_response:
-                self.progress_window.show_progress_window()
-                self.progress_window.begin_progress()
-                cut_title, cut_message = self.progress_window.get_cut_message()
-                messagebox.showinfo(cut_title, cut_message)
+                self.show_progress()
+                messagebox.showinfo(self.cut_title, self.cut_message)
                 
             else:
                 title = "Cut Canceled"
@@ -87,9 +84,6 @@ class Application(tk.Tk):
         self.keyboard.reset_entry()
 
     def confirm_cuts(self):
-        message = (f"Horizontal: {self.make_hor_printout()} in\n"
-                       f"Vertical: {self.make_ver_printout()} in")
-
         self.confirmation_window = tk.Toplevel(self)
         self.confirmation_window.attributes("-topmost", True)
         self.confirmation_window.attributes("-fullscreen", True)
@@ -118,6 +112,64 @@ class Application(tk.Tk):
         self.logger.info(f"Cut confirmation response: {response}")
         self.confirmation_response = response
         self.confirmation_window.destroy()
+
+
+    def show_progress(self):        
+        self.cancel_flag = False
+
+        self.progress_window = tk.Toplevel(self)
+        self.progress_window.attributes("-topmost", True)
+        self.progress_window.attributes("-fullscreen", True)
+        self.progress_window.title("Cutting")
+
+        self.progress_window.columnconfigure(0, weight=1)
+
+        self.progress_window.rowconfigure(0, weight=1)
+        self.progress_window.rowconfigure(1, weight=1)
+        self.progress_window.rowconfigure(2, weight=1)
+        self.progress_window.rowconfigure(3, weight=3)
+
+        progress_label = ttk.Label(self.progress_window, text="Cutting Board", font="Arial 32", anchor="center")
+        progress_label.grid(row=0, column=0, sticky="nsew")
+
+        cut_length = ttk.Label(self.progress_window, textvariable=self.message_var, font="Arial 24", anchor="center")
+        cut_length.grid(row=1, column=0, sticky="nsew")
+
+        self.progress_bar = ttk.Progressbar(self.progress_window, maximum=100)
+        self.progress_bar.grid(row=2, column=0, sticky="nsew")
+
+        cancel_button = ttk.Button(self.progress_window, text="Cancel Cut", command=lambda: self.cancel_process())
+        cancel_button.grid(row=3, column=0, sticky="nsew")
+
+        self.begin_progress()
+
+
+    def begin_progress(self):
+        self.cancel_flag = False
+        self.progress_bar["value"]=0
+        threading.Thread(target=self.cut).start()
+        self.logger.info("Starting Cut") 
+
+    def cut(self):
+        for i in range(50):
+            if self.cancel_flag:
+                self.cut_title = "Cut Canceled"
+                self.cut_message = "The cut has been canceled without completing."
+                break
+            else:
+                self.progress_bar.step(2)
+            time.sleep(0.1)
+        if not self.cancel_flag:
+            self.cut_title = "Cut Completed"
+            self.cut_message = "The cut has been completed successfully"
+        self.logger.info(f"{self.cut_title} - {self.cut_message}")
+        print("done")
+        self.progress_window.destroy()
+
+
+    def cancel_process(self):
+        self.cancel_flag = True
+  
      
         
     def validate_inputs(self):

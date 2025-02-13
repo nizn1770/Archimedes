@@ -1,5 +1,5 @@
 Known bugs:
-- key binds work in all windows
+- key binds don't work in all windows
     - don't know that we need it in all
 
 
