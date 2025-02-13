@@ -69,7 +69,7 @@ GPIO.setup(PUL_PIN, GPIO.OUT)
 GPIO.output(DIR_PIN, GPIO.HIGH)  # Set default direction
 GPIO.output(ENABLE_PIN, GPIO.HIGH)  # Enable starts HIGH (disabled)
 
-enable_state = False  # Motor starts disabled
+enable_state = True  # Motor starts disabled
 direction_state = True  # Default direction HIGH
 
 def move_motor(steps):
@@ -85,20 +85,26 @@ try:
     print("Controls: ENTER = Toggle Enable, UP = Toggle Direction")
     
     while True:
-        key = keyboard.read_event()
+        input("Press Enter to toggle motor...")  # Wait for Enter key press
+        enable_state = not enable_state
+        GPIO.output(ENABLE_PIN, GPIO.LOW if enable_state else GPIO.HIGH)
+        move_motor(STEPS_PER_MOVE)
 
-        if key.event_type == keyboard.KEY_DOWN:
-            if key.name == "enter":  # Toggle enable
-                enable_state = not enable_state
-                GPIO.output(ENABLE_PIN, GPIO.LOW if enable_state else GPIO.HIGH)
-                move_motor(STEPS_PER_MOVE)
 
-                print("Enable toggled:", "OFF" if enable_state else "ON")
+        # key = keyboard.read_event()
 
-            elif key.name == "up" and enable_state:  # Toggle direction
-                direction_state = not direction_state
-                GPIO.output(DIR_PIN, GPIO.HIGH if direction_state else GPIO.LOW)
-                print("Direction toggled:", "HIGH" if direction_state else "LOW")
+        # if key.event_type == keyboard.KEY_DOWN:
+        #     if key.name == "enter":  # Toggle enable
+        #         enable_state = not enable_state
+        #         GPIO.output(ENABLE_PIN, GPIO.LOW if enable_state else GPIO.HIGH)
+        #         move_motor(STEPS_PER_MOVE)
+
+        #         print("Enable toggled:", "OFF" if enable_state else "ON")
+
+        #     elif key.name == "up" and enable_state:  # Toggle direction
+        #         direction_state = not direction_state
+        #         GPIO.output(DIR_PIN, GPIO.HIGH if direction_state else GPIO.LOW)
+        #         print("Direction toggled:", "HIGH" if direction_state else "LOW")
 
             
 
