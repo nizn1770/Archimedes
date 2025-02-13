@@ -84,6 +84,12 @@ class Application(tk.Tk):
         self.keyboard.reset_entry()
 
     def confirm_cuts(self):
+<<<<<<< HEAD
+=======
+        message = (f"Horizontal: {self.horizontal_len} in\n"
+                       f"Vertical: {self.vertical_len} in")
+
+>>>>>>> parent of dd1eac4 (UI FIX)
         self.confirmation_window = tk.Toplevel(self)
         self.confirmation_window.attributes("-topmost", True)
         self.confirmation_window.attributes("-fullscreen", True)
@@ -116,6 +122,12 @@ class Application(tk.Tk):
 
     def show_progress(self):        
         self.cancel_flag = False
+<<<<<<< HEAD
+=======
+        
+        message = (f"\nHorizontal: {self.horizontal_len} in\n"
+                       f"Vertical: {self.vertical_len} in")
+>>>>>>> parent of dd1eac4 (UI FIX)
 
         self.progress_window = tk.Toplevel(self)
         self.progress_window.attributes("-topmost", True)
@@ -210,32 +222,32 @@ class Application(tk.Tk):
         if self.horizontal_len > config.MAX_HORIZONTAL:
             message += (f"\nHorizontal cut is too large:\n"
                        f"Max Horizontal Cut: {config.MAX_HORIZONTAL} in\n"
-                       f"Input Horizontal Cut: {self.make_hor_printout()} in\n")
+                       f"Input Horizontal Cut: {self.horizontal_len} in\n")
             self.bad_cut_length = True
         
         if self.horizontal_len < config.MIN_HORIZONTAL:
             message += (f"\nHorizontal cut is too small:\n"
                        f"Min Horizontal Cut: {config.MIN_HORIZONTAL} in\n"
-                       f"Input Horizontal Cut: {self.make_hor_printout()} in\n")
+                       f"Input Horizontal Cut: {self.horizontal_len} in\n")
             self.bad_cut_length = True
 
         if self.vertical_len > config.MAX_VERTICAL:
             message += (f"\nVertical cut is too large:\n"
                        f"Max Vertical Cut: {config.MAX_VERTICAL} in)\n"
-                       f"Input Vertical Cut: {self.make_ver_printout()} in)\n")
+                       f"Input Vertical Cut: {self.vertical_len} in)\n")
             self.bad_cut_length = True
                 
         if self.vertical_len < config.MIN_VERTICAL:
             message += (f"\nVertical cut is too small:\n"
                        f"Min Vertical Cut: {config.MIN_VERTICAL} in\n"
-                       f"Input Vertical Cut: {self.make_ver_printout()} in\n")
+                       f"Input Vertical Cut: {self.vertical_len} in\n")
             self.bad_cut_length = True
 
         if self.bad_cut_length:
             messagebox.showwarning("Cut Size Warning", message)
 
         else:
-            message = (f"Horizontal: {self.make_hor_printout()} in, Vertical: {self.make_ver_printout()} in")
+            message = (f"Horizontal: {self.horizontal_len} in, Vertical: {self.vertical_len} in")
         
         self.logger.info(message)
         print(message)
@@ -247,16 +259,6 @@ class Application(tk.Tk):
 
         return hor_len, ver_len
     
-
-    def make_hor_printout(self):
-        hor_len = f"{self.vals[0]} {self.vals[1]}/8"
-
-        return hor_len
-    
-    def make_ver_printout(self):
-        ver_len = f"{self.vals[2]} {self.vals[3]}/8"
-
-        return ver_len
 
     def clear_entries(self):
         for input_measure in [self.hor, self.vert]:
