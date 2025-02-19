@@ -86,6 +86,8 @@ class Application(tk.Tk):
         self.clear_entries()
         self.keyboard.reset_entry()
 
+        messagebox.showinfo("Returning to Home", "Returning Cut Head to Home.  Wait to retrieve and load")
+
     def confirm_cuts(self):
         self.confirmation_window = tk.Toplevel(self)
         self.confirmation_window.attributes("-topmost", True)
