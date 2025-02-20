@@ -2,9 +2,9 @@ import RPi.GPIO as GPIO
 import time
 
 # Define GPIO pins
-ENA_PIN = 37  # Physical pin 11
-DIR_PIN = 36  # Use another available GPIO
-PWM_PIN = 22  # PWM pin
+##ground to pin 34, 4 up on the right side 
+DIR_PIN = 36  # Use another available GPIO, 3 up on right side
+PWM_PIN = 22  # PWM pin, 10 up on right side
 PWM_FREQUENCY = 1000  # Frequency in Hz
 STEPS_PER_REV = 200  
 
