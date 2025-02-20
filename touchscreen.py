@@ -87,7 +87,7 @@ class Application(tk.Tk):
         self.clear_entries()
         self.keyboard.reset_entry()
 
-        messagebox.showinfo("Returning to Home", "Returning Cut Head to Home.  Wait to retrieve and load")
+        #messagebox.showinfo("Returning to Home", "Returning Cut Head to Home.  Wait to retrieve and load")
 
     def confirm_cuts(self):
         self.confirmation_window = tk.Toplevel(self)
@@ -154,7 +154,7 @@ class Application(tk.Tk):
         self.cancel_flag = False
         self.progress_bar["value"]=0
         threading.Thread(target=self.cut).start()
-        test.rotate_motor(self.vals[0]+self.vals[1]*(1/8))
+        threading.Thread(target=test.rotate_motor(self.vals[0]+self.vals[1]*(1/8))).start()
 
         self.logger.info("Starting Cut") 
 
