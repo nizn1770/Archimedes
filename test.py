@@ -7,6 +7,7 @@ DIR_PIN = 36  # Use another available GPIO, 3 up on right side
 PWM_PIN = 22  # PWM pin, 10 up on right side
 PWM_FREQUENCY = 1000  # Frequency in Hz
 STEPS_PER_REV = 200  
+SLEEP_TIME = 0.001 
 
 # GPIO setup
 GPIO.setmode(GPIO.BOARD)  # Use BOARD numbering
@@ -24,9 +25,15 @@ def rotate_motor(rotations):
     total_steps = int(rotations * STEPS_PER_REV)
     print(f"Rotating motor {rotations} rotations ({total_steps} steps)")
 
-    pwm.start(50)  # Start PWM with 50% duty cycle
-    time.sleep(total_steps / PWM_FREQUENCY)
-    pwm.stop()
+    for _ in range(total_steps):
+        GPIO.output(PWM_PIN, GPIO.HIGH)
+        time.sleep(SLEEP_TIME) 
+        GPIO.output(PWM_PIN, GPIO.LOW)
+        time.sleep(SLEEP_TIME)
+
+    # pwm.start(50)  # Start PWM with 50% duty cycle
+    # time.sleep(total_steps / PWM_FREQUENCY)
+    # pwm.stop()
 
 
 try:
