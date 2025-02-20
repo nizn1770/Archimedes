@@ -17,22 +17,16 @@ GPIO.output(DIR_PIN, GPIO.HIGH)
 
 # Setup PWM with 50% duty cycle
 pwm = GPIO.PWM(PWM_PIN, PWM_FREQUENCY)
-pwm.start(50)
-GPIO.output(PWM_PIN, GPIO.LOW)
 
 
 def rotate_motor(rotations):
-    GPIO.output(PWM_PIN, GPIO.LOW)
 
     total_steps = int(rotations * STEPS_PER_REV)
     print(f"Rotating motor {rotations} rotations ({total_steps} steps)")
 
-    for _ in range(total_steps):
-
-        GPIO.output(PWM_PIN, GPIO.HIGH)
-        time.sleep(1 / (2 * PWM_FREQUENCY))
-        GPIO.output(PWM_PIN, GPIO.LOW)
-        time.sleep(1 / (2 * PWM_FREQUENCY))
+    pwm.start(50)  # Start PWM with 50% duty cycle
+    time.sleep(total_steps / PWM_FREQUENCY)
+    pwm.stop()
 
 
 try:
