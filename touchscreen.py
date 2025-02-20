@@ -159,20 +159,23 @@ class Application(tk.Tk):
         self.logger.info("Starting Cut") 
 
     def cut(self):
-        for i in range(int(self.vals[0]+self.vals[1]*(1/8)*(1/test.SLEEP_TIME))):
-            if self.cancel_flag:
-                self.cut_title = "Cut Canceled"
-                self.cut_message = "The cut has been canceled without completing."
-                break
-            else:
-                self.progress_bar.step(2)
-            time.sleep(test.SLEEP_TIME)
-        if not self.cancel_flag:
-            self.cut_title = "Cut Completed"
-            self.cut_message = "The cut has been completed successfully"
-        self.logger.info(f"{self.cut_title} - {self.cut_message}")
-        print("done")
-        self.progress_window.destroy()
+        try:
+            for i in range(int(self.vals[0]+self.vals[1]*(1/8)*(1/test.SLEEP_TIME))):
+                if self.cancel_flag:
+                    self.cut_title = "Cut Canceled"
+                    self.cut_message = "The cut has been canceled without completing."
+                    break
+                else:
+                    self.progress_bar.step(2)
+                time.sleep(test.SLEEP_TIME)
+            if not self.cancel_flag:
+                self.cut_title = "Cut Completed"
+                self.cut_message = "The cut has been completed successfully"
+            self.logger.info(f"{self.cut_title} - {self.cut_message}")
+            print("done")
+            self.progress_window.destroy()
+        except Exception as e:
+            print(f"Error in cut(): {e}")
 
 
     def cancel_process(self):
