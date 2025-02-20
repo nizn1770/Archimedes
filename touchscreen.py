@@ -154,7 +154,7 @@ class Application(tk.Tk):
         self.cancel_flag = False
         self.progress_bar["value"]=0
         threading.Thread(target=self.cut).start()
-        threading.Thread(target=test.rotate_motor(self.vals[0]+self.vals[1]*(1/8))).start()
+        threading.Thread(target=test.rotate_motor, args=(self.vals[0]+self.vals[1]*(1/8))).start()
 
         self.logger.info("Starting Cut") 
 
