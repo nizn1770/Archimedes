@@ -176,8 +176,8 @@ class Application(tk.Tk):
                     self.cut_message = "The cut has been canceled without completing."
                     break
                 else:
-                    self.progress_bar.step(1/12)
-                time.sleep(1)
+                    self.progress_bar.step(100/(self.vals[0]+self.vals[1]*(1/8)))
+                time.sleep(test.SLEEP_TIME*2*test.STEPS_PER_REV)
             if not self.cancel_flag:
                 self.cut_title = "Cut Completed"
                 self.cut_message = "The cut has been completed successfully"
