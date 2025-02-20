@@ -6,43 +6,48 @@ ENA_PIN = 37  # Physical pin 11
 DIR_PIN = 36  # Use another available GPIO
 PWM_PIN = 22  # PWM pin
 PWM_FREQUENCY = 1000  # Frequency in Hz
+STEPS_PER_REV = 200  
 
 # GPIO setup
 GPIO.setmode(GPIO.BOARD)  # Use BOARD numbering
 GPIO.setwarnings(False)
-GPIO.setup(ENA_PIN, GPIO.OUT)
 GPIO.setup(DIR_PIN, GPIO.OUT)
 GPIO.setup(PWM_PIN, GPIO.OUT)
-GPIO.output(ENA_PIN, GPIO.HIGH)
-GPIO.output(DIR_PIN, GPIO.HIGH)  # Set this pin to always HIGH
+GPIO.output(DIR_PIN, GPIO.HIGH)
 
 # Setup PWM with 50% duty cycle
 pwm = GPIO.PWM(PWM_PIN, PWM_FREQUENCY)
 pwm.start(50)
+GPIO.output(PWM_PIN, GPIO.LOW)
 
-# Motor state variable
-motor_on = False
-direction_state = True 
+
+def rotate_motor(rotations):
+    GPIO.output(PWM_PIN, GPIO.LOW)
+
+    total_steps = int(rotations * STEPS_PER_REV)
+    print(f"Rotating motor {rotations} rotations ({total_steps} steps)")
+
+    for _ in range(total_steps):
+
+        GPIO.output(PWM_PIN, GPIO.HIGH)
+        time.sleep(1 / (2 * PWM_FREQUENCY))
+        GPIO.output(PWM_PIN, GPIO.LOW)
+        time.sleep(1 / (2 * PWM_FREQUENCY))
+
 
 try:
     while True:
-        input("Press Enter to toggle direction...")  # Wait for Enter key press
-        
-        # Turn off PWM before changing direction
-        GPIO.output(PWM_PIN, GPIO.LOW)  # Stop PWM
-        time.sleep(0.1)  
-        
-        # Change direction
-        direction_state = not direction_state  # Toggle direction
-        GPIO.output(DIR_PIN, GPIO.HIGH if direction_state else GPIO.LOW)
-        print(f"Direction: {'RIGHT' if direction_state else 'LEFT'}")
-        
-        # Turn PWM back on
-        GPIO.output(PWM_PIN, GPIO.HIGH)  # Restart PWM
+        rotations = float(input("Enter the number of rotations:"))
+        dir = input("Enter 0 for left and 1 for right:")
+        if dir == "0":
+            GPIO.output(DIR_PIN, GPIO.LOW)
+            print("Direction: LEFT")
+        else:
+            GPIO.output(DIR_PIN, GPIO.HIGH)
+            print("Direction: RIGHT")
 
+        rotate_motor(rotations)
         
-        # Short delay before next cycle
-        time.sleep(0.1)
             
 
 except KeyboardInterrupt:
