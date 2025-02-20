@@ -9,6 +9,7 @@ from tkinter import ttk
 from tkinter import PhotoImage
 from tkinter import messagebox
 from io import BytesIO
+import test
 
 
 
@@ -153,17 +154,19 @@ class Application(tk.Tk):
         self.cancel_flag = False
         self.progress_bar["value"]=0
         threading.Thread(target=self.cut).start()
+        test.rotate_motor(self.vals[0]+self.vals[1]*(1/8))
+
         self.logger.info("Starting Cut") 
 
     def cut(self):
-        for i in range(50):
+        for i in range(self.vals[0]+self.vals[1]*(1/8)*test.SLEEP_TIME):
             if self.cancel_flag:
                 self.cut_title = "Cut Canceled"
                 self.cut_message = "The cut has been canceled without completing."
                 break
             else:
                 self.progress_bar.step(2)
-            time.sleep(0.1)
+            time.sleep(test.SLEEP_TIME)
         if not self.cancel_flag:
             self.cut_title = "Cut Completed"
             self.cut_message = "The cut has been completed successfully"
