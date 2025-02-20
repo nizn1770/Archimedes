@@ -36,18 +36,19 @@ def rotate_motor(rotations):
     # pwm.stop()
 
 
-try:
-    while True:
-        rotations = float(input("Enter the number of rotations:"))
-        dir = input("Enter 0 for left and 1 for right:")
-        if dir == "0":
-            GPIO.output(DIR_PIN, GPIO.LOW)
-            print("Direction: LEFT")
-        else:
-            GPIO.output(DIR_PIN, GPIO.HIGH)
-            print("Direction: RIGHT")
+def test_motor():
+    try:
+        while True:
+            rotations = float(input("Enter the number of rotations:"))
+            dir = input("Enter 0 for left and 1 for right:")
+            if dir == "0":
+                GPIO.output(DIR_PIN, GPIO.LOW)
+                print("Direction: LEFT")
+            else:
+                GPIO.output(DIR_PIN, GPIO.HIGH)
+                print("Direction: RIGHT")
 
-        rotate_motor(rotations)
+            rotate_motor(rotations)
         
             
 
