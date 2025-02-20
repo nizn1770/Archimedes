@@ -7,7 +7,7 @@ DIR_PIN = 36  # Use another available GPIO, 3 up on right side
 PWM_PIN = 22  # PWM pin, 10 up on right side
 PWM_FREQUENCY = 1000  # Frequency in Hz
 STEPS_PER_REV = 1000  
-SLEEP_TIME = 0.001 
+SLEEP_TIME = 0.00025 
 
 # GPIO setup
 GPIO.setmode(GPIO.BOARD)  # Use BOARD numbering
