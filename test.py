@@ -52,7 +52,7 @@ def test_motor():
         
             
 
-except KeyboardInterrupt:
-    print("\nExiting program.")
-    pwm.stop()
-    GPIO.cleanup()  # Cleanup GPIO on exit
+    except KeyboardInterrupt:
+        print("\nExiting program.")
+        pwm.stop()
+        GPIO.cleanup()  # Cleanup GPIO on exit
