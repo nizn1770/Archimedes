@@ -153,10 +153,20 @@ class Application(tk.Tk):
     def begin_progress(self):
         self.cancel_flag = False
         self.progress_bar["value"]=0
-        threading.Thread(target=self.cut).start()
-        test.rotate_motor(self.vals[0]+self.vals[1]*(1/8))
 
         self.logger.info("Starting Cut") 
+        
+        threading.Thread(target=self.cut).start()
+        threading.Thread(target=self.run_motor_rotation).start()
+
+        
+
+    def run_motor_rotation(self):
+        try:
+            test.rotate_motor(self.vals[0]+self.vals[1]*(1/8))
+        except Exception as e:
+            print(f"Error in run_motor_rotation(): {e}")
+            self.logger.error(f"Error in run_motor_rotation(): {e}")
 
     def cut(self):
         try:
@@ -172,10 +182,10 @@ class Application(tk.Tk):
                 self.cut_title = "Cut Completed"
                 self.cut_message = "The cut has been completed successfully"
             self.logger.info(f"{self.cut_title} - {self.cut_message}")
-            print("done with cut")
             self.progress_window.destroy()
         except Exception as e:
             print(f"Error in cut(): {e}")
+            self.logger.error(f"Error in cut(): {e}")
 
 
     def cancel_process(self):
