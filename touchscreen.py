@@ -155,7 +155,7 @@ class Application(tk.Tk):
         self.progress_bar["value"]=0
 
         self.logger.info("Starting Cut") 
-        
+
         threading.Thread(target=self.cut).start()
         threading.Thread(target=self.run_motor_rotation).start()
 
@@ -170,14 +170,14 @@ class Application(tk.Tk):
 
     def cut(self):
         try:
-            for i in range(50):
+            for i in range(self.vals[0]+self.vals[1]*(1/8)*test.STEPS_PER_REV):
                 if self.cancel_flag:
                     self.cut_title = "Cut Canceled"
                     self.cut_message = "The cut has been canceled without completing."
                     break
                 else:
-                    self.progress_bar.step(2)
-                time.sleep(0.1)
+                    self.progress_bar.step(1/(self.vals[0]+self.vals[1]*(1/8)*test.STEPS_PER_REV))
+                time.sleep(test.SLEEP_TIME*2)
             if not self.cancel_flag:
                 self.cut_title = "Cut Completed"
                 self.cut_message = "The cut has been completed successfully"
