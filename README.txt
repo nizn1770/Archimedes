@@ -12,6 +12,8 @@ UI fixes:
 - want to print out as fraction
 
 Features to be added:
+- Add counter to keep track of number of cuts on blade
+- Add beginning screen to show finding home point.
 - Add screen to show returning head to home position.  Wait to remove board
 - CSV file with date/time, horizontal length, vertical length
 - add button to shutdown the entire rasp pi
