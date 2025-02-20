@@ -159,7 +159,7 @@ class Application(tk.Tk):
         self.logger.info("Starting Cut") 
 
     def cut(self):
-        for i in range(self.vals[0]+self.vals[1]*(1/8)*test.SLEEP_TIME):
+        for i in range(int(self.vals[0]+self.vals[1]*(1/8)*(1/test.SLEEP_TIME))):
             if self.cancel_flag:
                 self.cut_title = "Cut Canceled"
                 self.cut_message = "The cut has been canceled without completing."
