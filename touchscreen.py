@@ -170,14 +170,14 @@ class Application(tk.Tk):
 
     def cut(self):
         try:
-            for i in range(self.vals[0]+self.vals[1]*(1/8)*test.STEPS_PER_REV):
+            for i in range(self.vals[0]+self.vals[1]*(1/8)):
                 if self.cancel_flag:
                     self.cut_title = "Cut Canceled"
                     self.cut_message = "The cut has been canceled without completing."
                     break
                 else:
-                    self.progress_bar.step(1/(self.vals[0]+self.vals[1]*(1/8)*test.STEPS_PER_REV))
-                time.sleep(test.SLEEP_TIME*2)
+                    self.progress_bar.step(1/12)
+                time.sleep(1)
             if not self.cancel_flag:
                 self.cut_title = "Cut Completed"
                 self.cut_message = "The cut has been completed successfully"
