@@ -172,7 +172,7 @@ class Application(tk.Tk):
 
     def cut(self):
         try:
-            for i in range():
+            for i in range(1):
                 if self.cancel_flag:
                     self.cut_title = "Cut Canceled"
                     self.cut_message = "The cut has been canceled without completing."
