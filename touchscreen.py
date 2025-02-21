@@ -1,9 +1,7 @@
 import sys
 import config
-import requests
 import threading
 import time
-import progress_window
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
