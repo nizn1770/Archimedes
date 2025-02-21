@@ -75,7 +75,7 @@ class Application(tk.Tk):
             if self.confirmation_response:
                 self.show_progress()
                 self.wait_window(self.progress_window)
-                messagebox.showinfo(self.cut_title, self.cut_message)
+                #messagebox.showinfo(self.cut_title, self.cut_message)
                 
             else:
                 title = "Cut Canceled"
@@ -161,14 +161,16 @@ class Application(tk.Tk):
 
     def run_motor_rotation(self):
         try:
-            test.rotate_motor(self.vals[0]+self.vals[1]*(1/8))
+            test.rotate_motor(self.vals[0]+self.vals[1]*(1/8), True)
+            time.sleep(2)
+            test.rotate_motor(self.vals[2]+self.vals[3]*(1/8), False)
         except Exception as e:
             print(f"Error in run_motor_rotation(): {e}")
             self.logger.error(f"Error in run_motor_rotation(): {e}")
 
     def cut(self):
         try:
-            for i in range(self.vals[0]+self.vals[1]*(1/8)):
+            for i in range():
                 if self.cancel_flag:
                     self.cut_title = "Cut Canceled"
                     self.cut_message = "The cut has been canceled without completing."
