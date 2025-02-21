@@ -1,5 +1,6 @@
 import sys
 import config
+import requests
 import threading
 import time
 import tkinter as tk
