@@ -39,6 +39,7 @@ try:
                 GPIO.output(config.X_DIR_PIN, GPIO.HIGH)
 
             frequency = RPM * config.X_STEPS_PER_REV / 60
+            distance = distance * config.X_PITCH
 
             rotate_motor(config.X_PWM_PIN, distance, config.X_STEPS_PER_REV, frequency)
 
@@ -51,6 +52,7 @@ try:
                 GPIO.output(config.Y_DIR_PIN, GPIO.HIGH)
 
             frequency = RPM * config.Y_STEPS_PER_REV / 60
+            distance = distance * config.Y_PITCH
 
             rotate_motor(config.Y_PWM_PIN, distance, config.Y_STEPS_PER_REV, frequency)
 
