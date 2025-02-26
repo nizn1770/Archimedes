@@ -27,7 +27,7 @@ def rotate_motor(pin, distance, steps, frequency):
 
 try:
     while True:
-        frequency = int(input("Enter frequency: "))
+        RPM = int(input("Enter RPM: "))
         motor = input("Enter motor (x/y/z): ")
         distance = float(input("Enter distance (in inches): "))
         
@@ -37,6 +37,8 @@ try:
                 GPIO.output(config.X_DIR_PIN, GPIO.LOW)
             else:
                 GPIO.output(config.X_DIR_PIN, GPIO.HIGH)
+
+            frequency = RPM * config.X_STEPS_PER_REV / 60
 
             rotate_motor(config.X_PWM_PIN, distance, config.X_STEPS_PER_REV, frequency)
 
@@ -48,6 +50,8 @@ try:
             else:
                 GPIO.output(config.Y_DIR_PIN, GPIO.HIGH)
 
+            frequency = RPM * config.Y_STEPS_PER_REV / 60
+
             rotate_motor(config.Y_PWM_PIN, distance, config.Y_STEPS_PER_REV, frequency)
 
         if motor == "z":
@@ -56,6 +60,8 @@ try:
                 GPIO.output(config.Z_DIR_PIN, GPIO.LOW)
             else:
                 GPIO.output(config.Z_DIR_PIN, GPIO.HIGH)
+
+            frequency = RPM * config.X_STEPS_PER_REV / 60
 
             rotate_motor(config.Z_PWM_PIN, distance, config.Z_STEPS_PER_REV, frequency)
             
