@@ -17,7 +17,7 @@ frequency = 2000
 def rotate_motor(pin, distance, steps, frequency):
 
     total_steps = int(distance * steps)
-    SLEEP_TIME = 1 / frequency
+    SLEEP_TIME = 1 / (frequency*2)
 
     for _ in range(total_steps):
         GPIO.output(pin, GPIO.HIGH)
