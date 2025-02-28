@@ -1,5 +1,4 @@
 import touchscreen
-import cnc_control
 import utils.logging_config 
 from utils.logging_config import logger
 
