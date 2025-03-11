@@ -1,10 +1,9 @@
 import sys
 import config
-import motor
-import requests
+#import motor
+#import requests
 import threading
 import time
-import progress_window
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
@@ -18,20 +17,75 @@ class Application(tk.Tk):
         super().__init__()
 
         self.logger = logger
-        self.logger.info("Archimedes initialized")
+        self.logger.info("Initializing Archimedes")
+
+        self.title("Archimedes")
+        self.bind("<Escape>", self.exit_fullscreen)
+        self.bind("Q", self.quit_program)
 
         self.vals = [0,0,0,0]
 
         self.message_var = tk.StringVar(value="test")
         self.cut_title = "test"
         self.cut_message = "test"
+
+        self.loading_screen = self.create_loading_screen()
+        self.loading_screen.deiconify()
+
+    def create_loading_screen(self):
+        loading_window = tk.Toplevel(self)
+        loading_window.attributes("-topmost", True)
+        loading_window.geometry(config.GEOMETRY)
+        loading_window.title("Initializing Archimedes")
+
+        loading_window.columnconfigure(0, weight=1)
+        loading_window.rowconfigure(0, weight=1)
+        loading_window.rowconfigure(1, weight=1)
+
+        logo_image = PhotoImage(file=config.LOGO_IMAGE)
+        logo_image_label = tk.Label(loading_window, image=logo_image)
+        logo_image_label.grid(row=0, column=0, sticky="nsew")
+
+        loading_label = tk.Label(loading_window, textvariable="Loading Archimedes...", font="Arial 24", anchor='center')
+        loading_label.grid(row=1, column=0, sticky="nsew")
+
+        return loading_window
+
+
+
+
+
+
+    def initialize_machine():
+        motor.init_motors()
+        self.logger.info("Initializing motors")
+
+        time.sleep(10) ##sleep for 10 seconds for now to simulate motor initialization
+
+        #get the machine position from sd
+
+        #check to see if machine is in the right position
+        #if not, move to home position
+
+
+        #retrive blade hp from sd
         
-        self.title("Archimedes")
+        #check to see if blade is at good health
 
-        self.attributes("-fullscreen", True)
-        self.bind("<Escape>", self.exit_fullscreen)
-        self.bind("Q", self.quit_program)
+        self.loading_screen.destroy()
+        self.logger.info("Archimedes initialized")
 
+
+    def exit_fullscreen(self, event=None):
+        self.attributes("-fullscreen", False)
+    
+    def quit_program(self, event=None):
+        sys.exit(0)
+
+    def update_message(self, message):
+        self.message_var.set(message)
+
+    def measure_init(self):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
 
@@ -51,16 +105,6 @@ class Application(tk.Tk):
 
         self.keyboard = KeyBoard(self, [self.hor, self.vert])
         self.keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
-
-    def exit_fullscreen(self, event=None):
-        self.attributes("-fullscreen", False)
-    
-    def quit_program(self, event=None):
-        sys.exit(0)
-
-    def update_message(self, message):
-        self.message_var.set(message)
-
 
     def send_cuts(self):
         self.validate_inputs()
@@ -176,8 +220,7 @@ class Application(tk.Tk):
     def cancel_process(self):
         self.cancel_flag = True
   
-     
-        
+       
     def validate_inputs(self):
         self.valid_inputs = False
         self.get_vals()
@@ -246,8 +289,6 @@ class Application(tk.Tk):
         self.logger.info(message)
         print(message)
             
-
-
     def make_hor_printout(self):
         hor_len = f"{self.vals[0]} {self.vals[1]}/8"
 
@@ -258,14 +299,12 @@ class Application(tk.Tk):
 
         return ver_len
     
-
     def combine_vals(self):
         hor_len = self.vals[0] + self.vals[1] * (1/8)
         ver_len = self.vals[2] + self.vals[3] * (1/8)
 
         return hor_len, ver_len
     
-
     def clear_entries(self):
         for input_measure in [self.hor, self.vert]:
             input_measure.inch.delete(0, tk.END)
