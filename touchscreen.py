@@ -53,9 +53,6 @@ class Application(tk.Tk):
 
 
 
-
-
-
     def initialize_machine():
         motor.init_motors()
         self.logger.info("Initializing motors")
