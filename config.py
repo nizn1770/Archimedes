@@ -16,6 +16,8 @@ MAX_VERTICAL = 48
 MIN_HORIZONTAL = 12
 MIN_VERTICAL = 12
 
+Z_JOG = 1
+
 
 
 #Machine pin set ups
