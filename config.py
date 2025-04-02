@@ -35,10 +35,12 @@ Z_DIR_PIN = 18
 Z_PWM_PIN = 22
 Z_RPM = 100
 Z_STEPS_PER_REV = 1000
+Z_PITCH = 1
 
 A_PWM_PIN = 33
 A_FOR_PIN = 36
 A_REV_PIN = 37
+A_FREQ = 100
 
 motor_configs = {
         'x': {
