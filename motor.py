@@ -1,8 +1,47 @@
-import RPi.GPIO as GPIO
 import time
 import config
 #import keyboard
 import threading
+
+# Set this to True when running on Raspberry Pi
+RUN_ON_PI = False
+
+# Conditionally import RPi.GPIO
+if RUN_ON_PI:
+    import RPi.GPIO as GPIO
+else:
+    class GPIO_Mock:
+        BOARD = "BOARD"
+        OUT = "OUT"
+        LOW = "LOW"
+        HIGH = "HIGH"
+
+        def setmode(self, mode):
+            print(f"Mock GPIO: Set mode {mode}")
+            
+
+        def setwarnings(self, flag):
+            print(f"Mock GPIO: Set warnings {flag}")
+
+        def setup(self, pin, mode):
+            print(f"Mock GPIO: Setup pin {pin} as {mode}")
+
+        def output(self, pin, state):
+            #print(f"Mock GPIO: Set pin {pin} to {state}")
+            return 1
+
+        def PWM(self, pin, freq):
+            print(f"Mock GPIO: Start PWM on pin {pin} with frequency {freq}")
+            return self.MockPWM()
+
+        def cleanup(self):
+            print("Mock GPIO: Cleanup")
+
+        class MockPWM:
+            def start(self, duty_cycle):
+                print(f"Mock PWM: Started with duty cycle {duty_cycle}")
+
+    GPIO = GPIO_Mock()  # Use mock GPIO when not on Pi
 
 def init_motors():
     """
@@ -67,16 +106,19 @@ def rotate_motor(motor, direction, distance, rpm):
     frequency = rpm * steps / 60  # Convert RPM to step frequency
     SLEEP_TIME = 1 / (frequency * 2)  # Calculate delay between steps
 
+    print(f"frequency: {frequency} steps/s Sleep time: {SLEEP_TIME} seconds total_steps: {total_steps}")
+
     for step in range(total_steps):
         # if emergency_stop:
         #     break
         if step % (steps*pitch) == 0:
-            print(f"Step {step} of {total_steps} for motor {motor} in direction {direction}")
+            print(f"Motor {motor} traveled {step / (steps * pitch)} inches in direction {direction}")
 
         GPIO.output(pwm_pin, GPIO.HIGH)  # Activate PWM pin
         time.sleep(SLEEP_TIME) 
         GPIO.output(pwm_pin, GPIO.LOW)  # Deactivate PWM pin
         time.sleep(SLEEP_TIME)
+    print(f"Motor {motor} traveled {total_steps / (steps * pitch)} inches in direction {direction}")
 
 def move_actuator(direction):
     """
@@ -97,6 +139,10 @@ def move_actuator(direction):
     else:
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
+    
+    for _ in range(5):
+        time.sleep(1)
+        print("Actuator moving...")
 
 def move_head(direction):
     """
@@ -120,8 +166,9 @@ def return_to_home(x_len, y_len):
     move_head("u")  # Raise the cutting head
     move_actuator("i")  # Retract actuator
     
-    rotate_motor("x", "l", x_len, config.X_RPM)  # Move X-axis back to home
     rotate_motor("y", "u", y_len, config.Y_RPM)  # Move Y-axis back to home
+    rotate_motor("x", "l", x_len, config.X_RPM)  # Move X-axis back to home
+    
 
 def main():
     """
@@ -137,6 +184,8 @@ def main():
 
     # Start the emergency stop listener in a separate thread
     # stop_thread = threading.Thread(target=listen_for_stop, daemon=True).start()
+
+    print(f"{config.X_RPM} X {config.Y_RPM} Y")
 
     try:
         while True:

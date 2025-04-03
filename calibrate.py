@@ -1,8 +1,47 @@
-import RPi.GPIO as GPIO
 import time
 import config
 # import keyboard
 import threading
+
+# Set this to True when running on Raspberry Pi
+RUN_ON_PI = False
+
+# Conditionally import RPi.GPIO
+if RUN_ON_PI:
+    import RPi.GPIO as GPIO
+else:
+    class GPIO_Mock:
+        BOARD = "BOARD"
+        OUT = "OUT"
+        LOW = "LOW"
+        HIGH = "HIGH"
+
+        def setmode(self, mode):
+            print(f"Mock GPIO: Set mode {mode}")
+            
+
+        def setwarnings(self, flag):
+            print(f"Mock GPIO: Set warnings {flag}")
+
+        def setup(self, pin, mode):
+            print(f"Mock GPIO: Setup pin {pin} as {mode}")
+
+        def output(self, pin, state):
+            #print(f"Mock GPIO: Set pin {pin} to {state}")
+            return 1
+
+        def PWM(self, pin, freq):
+            print(f"Mock GPIO: Start PWM on pin {pin} with frequency {freq}")
+            return self.MockPWM()
+
+        def cleanup(self):
+            print("Mock GPIO: Cleanup")
+
+        class MockPWM:
+            def start(self, duty_cycle):
+                print(f"Mock PWM: Started with duty cycle {duty_cycle}")
+
+    GPIO = GPIO_Mock()  # Use mock GPIO when not on Pi
 
 
 def init_motors():
