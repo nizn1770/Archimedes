@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import config
-import keyboard
+#import keyboard
 import threading
 
 def init_motors():
@@ -38,16 +38,16 @@ def cleanup_motors():
     """
     GPIO.cleanup()
 
-def listen_for_stop():
-    """
-    Listens for an emergency stop key ('q') and stops all motor operations when triggered.
-    """
-    global emergency_stop
-    keyboard.wait("q")  # Wait for 'q' key press to trigger emergency stop
-    emergency_stop = True
-    print("Emergency stop activated. Exiting...")
-    GPIO.cleanup()
-    exit()
+# def listen_for_stop():
+#     """
+#     Listens for an emergency stop key ('q') and stops all motor operations when triggered.
+#     """
+#     global emergency_stop
+#     keyboard.wait("q")  # Wait for 'q' key press to trigger emergency stop
+#     emergency_stop = True
+#     print("Emergency stop activated. Exiting...")
+#     GPIO.cleanup()
+#     exit()
 
 def rotate_motor(motor, direction, distance, rpm):
     """
@@ -56,9 +56,9 @@ def rotate_motor(motor, direction, distance, rpm):
     - Sets direction based on user input.
     - Executes motor steps unless an emergency stop is triggered.
     """
-    global emergency_stop
-    if emergency_stop:
-        return
+    # global emergency_stop
+    # if emergency_stop:
+    #     return
     
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
     GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u'] else GPIO.HIGH)  # Set motor direction
@@ -79,9 +79,9 @@ def move_actuator(direction):
     """
     Moves the actuator in the specified direction ('o' for out, 'i' for in).
     """
-    global emergency_stop
-    if emergency_stop:
-        return
+    # global emergency_stop
+    # if emergency_stop:
+    #     return
     
     if direction == "o":
         GPIO.output(config.A_FOR_PIN, GPIO.HIGH)
@@ -97,9 +97,9 @@ def move_head(direction):
     """
     Moves the cutting head along the Z-axis in the specified direction.
     """
-    global emergency_stop
-    if emergency_stop:
-        return
+    # global emergency_stop
+    # if emergency_stop:
+    #     return
     rotate_motor("z", direction, config.Z_JOG, config.Z_RPM)  
 
 def return_to_home(x_len, y_len):
@@ -107,9 +107,9 @@ def return_to_home(x_len, y_len):
     Returns the machine to its home position after a cutting operation.
     - Moves head up, retracts actuator, and repositions X and Y axes.
     """
-    global emergency_stop
-    if emergency_stop:
-        return
+    # global emergency_stop
+    # if emergency_stop:
+    #     return
     
     move_head("u")  # Raise the cutting head
     move_actuator("i")  # Retract actuator
@@ -124,13 +124,13 @@ def main():
     - Accepts user input for cut dimensions and executes the cutting sequence.
     - Returns to home position after cutting and waits for user confirmation.
     """
-    global emergency_stop
-    emergency_stop = False
+    # global emergency_stop
+    # emergency_stop = False
 
     init_motors()
 
     # Start the emergency stop listener in a separate thread
-    stop_thread = threading.Thread(target=listen_for_stop, daemon=True).start()
+    # stop_thread = threading.Thread(target=listen_for_stop, daemon=True).start()
 
     try:
         while True:

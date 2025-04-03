@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import config
-import keyboard
+# import keyboard
 import threading
 
 
@@ -37,18 +37,18 @@ def init_motors():
     GPIO.PWM(config.A_PWM_PIN, config.A_FREQ).start(25)
 
 
-def listen_for_stop():
-    """
-    Listens for the 'q' key press to trigger an emergency stop.
-    - When 'q' is pressed, sets `emergency_stop` to True.
-    - Cleans up GPIO before terminating the program.
-    """
-    global emergency_stop
-    keyboard.wait("q")  # Wait until 'q' is pressed
-    emergency_stop = True  # Set emergency stop flag
-    print("Emergency stop activated. Exiting...")
-    GPIO.cleanup()  # Clean up GPIO pins before exiting
-    exit()  # Terminate the program
+# def listen_for_stop():
+#     """
+#     Listens for the 'q' key press to trigger an emergency stop.
+#     - When 'q' is pressed, sets `emergency_stop` to True.
+#     - Cleans up GPIO before terminating the program.
+#     """
+#     global emergency_stop
+#     keyboard.wait("q")  # Wait until 'q' is pressed
+#     emergency_stop = True  # Set emergency stop flag
+#     print("Emergency stop activated. Exiting...")
+#     GPIO.cleanup()  # Clean up GPIO pins before exiting
+#     exit()  # Terminate the program
 
 
 def rotate_motor(motor, direction, distance, rpm):
@@ -62,9 +62,9 @@ def rotate_motor(motor, direction, distance, rpm):
     The function calculates the required number of steps and sends PWM signals accordingly.
     It also checks for an emergency stop before and during execution.
     """
-    global emergency_stop
-    if emergency_stop:  # Stop execution if emergency stop is activated
-        return
+    # global emergency_stop
+    # if emergency_stop:  # Stop execution if emergency stop is activated
+    #     return
 
     # Retrieve motor control pins and parameters
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
@@ -79,8 +79,8 @@ def rotate_motor(motor, direction, distance, rpm):
 
     # Generate step pulses to rotate the motor
     for _ in range(total_steps):
-        if emergency_stop:  # Check for emergency stop after each step
-            break
+        # if emergency_stop:  # Check for emergency stop after each step
+        #     break
 
         GPIO.output(pwm_pin, GPIO.HIGH)  # Step signal ON
         time.sleep(SLEEP_TIME)
@@ -95,9 +95,9 @@ def move_actuator(direction):
 
     The function sets the appropriate control pins to move the actuator.
     """
-    global emergency_stop
-    if emergency_stop:  # Stop execution if emergency stop is activated
-        return
+    # global emergency_stop
+    # if emergency_stop:  # Stop execution if emergency stop is activated
+    #     return
 
     # Set actuator movement direction
     if direction == "o":
@@ -118,18 +118,18 @@ def main():
     - Prompts the user to enter commands for moving motors or the actuator.
     - Runs an infinite loop until interrupted by the user or an emergency stop.
     """
-    global emergency_stop
-    emergency_stop = False  # Initialize emergency stop flag
+    # global emergency_stop
+    # emergency_stop = False  # Initialize emergency stop flag
 
     init_motors()  # Initialize motor and actuator GPIO
-    listener_thread = threading.Thread(target=listen_for_stop, daemon=True).start()
+    # listener_thread = threading.Thread(target=listen_for_stop, daemon=True).start()
 
     try:
         while True:
             motor = input("Enter motor (x/y/z/a): ").lower()
 
-            if emergency_stop:  # Stop execution if emergency stop is activated
-                break
+            # if emergency_stop:  # Stop execution if emergency stop is activated
+            #     break
 
             if motor == "a":  # Actuator movement
                 direction = input("Enter direction of actuator (i/o): ").lower()
