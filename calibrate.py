@@ -4,7 +4,7 @@ import config
 import threading
 
 # Set this to True when running on Raspberry Pi
-RUN_ON_PI = False
+RUN_ON_PI = True
 
 # Conditionally import RPi.GPIO
 if RUN_ON_PI:
@@ -72,8 +72,10 @@ def init_motors():
     GPIO.setup(config.A_FOR_PIN, GPIO.OUT)
     GPIO.setup(config.A_REV_PIN, GPIO.OUT)
 
+    GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
+
     # Start PWM signal for actuator motor at a fixed frequency
-    GPIO.PWM(config.A_PWM_PIN, config.A_FREQ).start(25)
+    #GPIO.PWM(config.A_PWM_PIN, config.A_FREQ).start(25)
 
 
 # def listen_for_stop():
