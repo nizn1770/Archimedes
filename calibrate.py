@@ -142,11 +142,15 @@ def move_actuator(direction):
 
     # Set actuator movement direction
     if direction == "o":
+        GPIO.output(config.A_PWM_PIN, GPIO.LOW)
         GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
         GPIO.output(config.A_REV_PIN, GPIO.LOW)
+        GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
     elif direction == "i":
+        GPIO.output(config.A_PWM_PIN, GPIO.LOW)
         GPIO.output(config.A_FOR_PIN, GPIO.LOW)
         GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
+        GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
     else:
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
