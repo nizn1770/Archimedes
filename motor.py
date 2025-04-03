@@ -67,9 +67,12 @@ def rotate_motor(motor, direction, distance, rpm):
     frequency = rpm * steps / 60  # Convert RPM to step frequency
     SLEEP_TIME = 1 / (frequency * 2)  # Calculate delay between steps
 
-    for _ in range(total_steps):
+    for step in range(total_steps):
         # if emergency_stop:
         #     break
+        if step % (steps*pitch) == 0:
+            print(f"Step {step} of {total_steps} for motor {motor} in direction {direction}")
+
         GPIO.output(pwm_pin, GPIO.HIGH)  # Activate PWM pin
         time.sleep(SLEEP_TIME) 
         GPIO.output(pwm_pin, GPIO.LOW)  # Deactivate PWM pin
@@ -84,9 +87,11 @@ def move_actuator(direction):
     #     return
     
     if direction == "o":
+        print("Moving actuator out")
         GPIO.output(config.A_FOR_PIN, GPIO.HIGH)
         GPIO.output(config.A_REV_PIN, GPIO.LOW)
     elif direction == "i":
+        print("Moving actuator in")
         GPIO.output(config.A_FOR_PIN, GPIO.LOW)
         GPIO.output(config.A_REV_PIN, GPIO.HIGH)
     else:
@@ -100,6 +105,7 @@ def move_head(direction):
     # global emergency_stop
     # if emergency_stop:
     #     return
+    print(f"Moving head {direction}")
     rotate_motor("z", direction, config.Z_JOG, config.Z_RPM)  
 
 def return_to_home(x_len, y_len):
@@ -110,7 +116,7 @@ def return_to_home(x_len, y_len):
     # global emergency_stop
     # if emergency_stop:
     #     return
-    
+    print("Returning to home position...")
     move_head("u")  # Raise the cutting head
     move_actuator("i")  # Retract actuator
     
@@ -136,6 +142,7 @@ def main():
         while True:
             x_len = int(input("Enter the length of the X cut in inches: "))  # Get X cut length from user
             y_len = int(input("Enter the length of the Y cut in inches: "))  # Get Y cut length from user
+
 
             rotate_motor("y", "d", config.MAX_VERTICAL - y_len, config.Y_RPM)
             move_actuator("o")  # Extend actuator
