@@ -134,8 +134,8 @@ def main():
 
     try:
         while True:
-            x_len = input(int("Enter the length of the X cut in inches: "))  # Get X cut length from user
-            y_len = input(int("Enter the length of the Y cut in inches: "))  # Get Y cut length from user
+            x_len = int(input("Enter the length of the X cut in inches: "))  # Get X cut length from user
+            y_len = int(input("Enter the length of the Y cut in inches: "))  # Get Y cut length from user
 
             rotate_motor("y", "d", config.MAX_VERTICAL - y_len, config.Y_RPM)
             move_actuator("o")  # Extend actuator
