@@ -68,8 +68,8 @@ def rotate_motor(motor, direction, distance, rpm):
     SLEEP_TIME = 1 / (frequency * 2)  # Calculate delay between steps
 
     for _ in range(total_steps):
-        if emergency_stop:
-            break
+        # if emergency_stop:
+        #     break
         GPIO.output(pwm_pin, GPIO.HIGH)  # Activate PWM pin
         time.sleep(SLEEP_TIME) 
         GPIO.output(pwm_pin, GPIO.LOW)  # Deactivate PWM pin
