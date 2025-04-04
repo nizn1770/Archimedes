@@ -111,7 +111,7 @@ def rotate_motor(motor, direction, distance, rpm):
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
 
     # Set motor direction based on input ('l' and 'u' -> LOW, 'r' and 'd' -> HIGH)
-    GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u'] else GPIO.HIGH)
+    GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'd'] else GPIO.HIGH)
 
     # Calculate total steps needed based on distance and pitch
     total_steps = int(distance * steps * pitch)
