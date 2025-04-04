@@ -46,7 +46,7 @@ try:
             
         if motor == "y":
             direction = input("Enter direction (u/d): ")
-            if direction == "u":
+            if direction == "d":
                 GPIO.output(config.Y_DIR_PIN, GPIO.LOW)
             else:
                 GPIO.output(config.Y_DIR_PIN, GPIO.HIGH)
