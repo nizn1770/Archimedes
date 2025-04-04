@@ -4,7 +4,7 @@ import config
 import threading
 
 # Set this to True when running on Raspberry Pi
-RUN_ON_PI = False
+RUN_ON_PI = True
 
 # Conditionally import RPi.GPIO
 if RUN_ON_PI:
