@@ -72,7 +72,8 @@ def init_motors():
     GPIO.setup(config.A_FOR_PIN, GPIO.OUT)
     GPIO.setup(config.A_REV_PIN, GPIO.OUT)
 
-    GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
+    pwm = GPIO.PWM(config.A_PWM_PIN, 100)  # Create PWM object for actuator
+    pwm.start(25)  # Start PWM signal for actuator motor at 25% duty cycle
 
     # Start PWM signal for actuator motor at a fixed frequency
     #GPIO.PWM(config.A_PWM_PIN, config.A_FREQ).start(25)
