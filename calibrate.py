@@ -95,14 +95,14 @@ def init_motors():
 
 def rotate_motor(motor, direction, distance, rpm):
     """
-    Rotates the specified motor for a given distance at a specific speed (RPM) with RPM-dependent ramping.
+    Rotates the specified motor for a given distance at a specific speed (RPM) with ramp-up only.
     - motor: Identifier ('x', 'y', 'z')
     - direction: 'l' (left), 'r' (right), 'u' (up), 'd' (down)
     - distance: Distance in inches
     - rpm: Rotational speed in revolutions per minute
 
-    The function calculates the required number of steps, applies ramp-up and ramp-down phases
-    with duration based on RPM, and sends PWM signals accordingly.
+    The function calculates the required number of steps, applies a ramp-up phase followed by
+    constant speed, and sends PWM signals accordingly. No ramp-down is performed.
     """
     # Retrieve motor control pins and parameters
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
@@ -114,12 +114,12 @@ def rotate_motor(motor, direction, distance, rpm):
     total_steps = int(distance * steps * pitch)
     target_frequency = rpm * steps / 60  # Convert RPM to step frequency (steps per second)
 
-    # Define ramp parameters (fixed ramp time in seconds)
-    RAMP_TIME = 0.5  # Time for ramp-up or ramp-down (adjust as needed)
-    ramp_steps = int(target_frequency * RAMP_TIME)  # Steps for ramp-up or ramp-down
+    # Define ramp parameters (fixed ramp time in seconds for ramp-up)
+    RAMP_TIME = 0.5  # Time for ramp-up (adjust as needed)
+    ramp_steps = int(target_frequency * RAMP_TIME)  # Steps for ramp-up
     ramp_steps = max(1, min(ramp_steps, 200))  # Cap between 1 and 200 steps
 
-    # Calculate frequency increment for ramp-up and ramp-down
+    # Calculate frequency increment for ramp-up
     frequency_increment = target_frequency / ramp_steps if ramp_steps > 0 else target_frequency
 
     # Ramp-up phase
@@ -132,7 +132,7 @@ def rotate_motor(motor, direction, distance, rpm):
         time.sleep(sleep_time)
 
     # Constant speed phase
-    constant_steps = total_steps - 2 * ramp_steps  # Steps at full speed
+    constant_steps = total_steps - ramp_steps  # Steps at full speed
     if constant_steps > 0:
         sleep_time = 1 / (target_frequency * 2)  # Sleep time for target frequency
         for _ in range(constant_steps):
@@ -140,17 +140,6 @@ def rotate_motor(motor, direction, distance, rpm):
             time.sleep(sleep_time)
             GPIO.output(pwm_pin, GPIO.LOW)  # Step signal OFF
             time.sleep(sleep_time)
-
-    # Ramp-down phase
-    for step in range(ramp_steps):
-        current_frequency = target_frequency - (frequency_increment * (step + 1))
-        if current_frequency <= 0:  # Avoid division by zero
-            current_frequency = 0.01
-        sleep_time = 1 / (current_frequency * 2)  # Calculate delay for step signal
-        GPIO.output(pwm_pin, GPIO.HIGH)  # Step signal ON
-        time.sleep(sleep_time)
-        GPIO.output(pwm_pin, GPIO.LOW)  # Step signal OFF
-        time.sleep(sleep_time)
 
 def move_actuator(direction):
     """
