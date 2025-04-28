@@ -100,7 +100,7 @@ def rotate_motor(motor, direction, distance, rpm):
     #     return
     
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
-    GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'd'] else GPIO.HIGH)  # Set motor direction
+    GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u', 'i'] else GPIO.HIGH)  # Set motor direction
 
     total_steps = int(distance * steps * pitch)  # Calculate total steps needed
     frequency = rpm * steps / 60  # Convert RPM to step frequency
@@ -163,7 +163,7 @@ def return_to_home(x_len, y_len):
     # if emergency_stop:
     #     return
     print("Returning to home position...")
-    move_head("u")  # Raise the cutting head
+    move_head("o")  # Raise the cutting head
     move_actuator("i")  # Retract actuator
     
     rotate_motor("y", "u", y_len, config.Y_RPM)  # Move Y-axis back to home
@@ -195,17 +195,17 @@ def main():
 
             rotate_motor("y", "d", config.MAX_VERTICAL - y_len, config.Y_RPM)
             move_actuator("o")  # Extend actuator
-            move_head("d")  # Lower cutting head
+            move_head("i")  # Lower cutting head
 
             rotate_motor("x", "r", config.MAX_HORIZONTAL, config.X_RPM)
 
-            move_head("u")  # Raise cutting head
+            move_head("o")  # Raise cutting head
 
             input("Remove scrap piece of panel and press Enter to continue...")
 
             rotate_motor("x", "l", config.MAX_HORIZONTAL - x_len, config.X_RPM)
             move_actuator("i")  # Retract actuator
-            move_head("d")  # Lower cutting head
+            move_head("i")  # Lower cutting head
 
             rotate_motor("y", "d", y_len, config.Y_RPM)
             

@@ -112,7 +112,7 @@ def rotate_motor(motor, direction, distance, rpm):
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
 
     # Set motor direction based on input ('l' and 'u' -> LOW, 'r' and 'd' -> HIGH)
-    GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'd'] else GPIO.HIGH)
+    GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u', 'i'] else GPIO.HIGH)
 
     # Calculate total steps needed based on distance and pitch
     total_steps = int(distance * steps * pitch)
@@ -143,15 +143,11 @@ def move_actuator(direction):
 
     # Set actuator movement direction
     if direction == "o":
-        GPIO.output(config.A_PWM_PIN, GPIO.LOW)
         GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
         GPIO.output(config.A_REV_PIN, GPIO.LOW)
-        GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
     elif direction == "i":
-        GPIO.output(config.A_PWM_PIN, GPIO.LOW)
         GPIO.output(config.A_FOR_PIN, GPIO.LOW)
         GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
-        GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
     else:
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
@@ -181,7 +177,7 @@ def main():
                 direction = input("Enter direction of actuator (i/o): ").lower()
                 move_actuator(direction)
             elif motor in MOTOR_PINS:  # Motor movement
-                direction = input("Enter direction (l/r/u/d): ").lower()
+                direction = input("Enter direction (l/r/u/d/i/o): ").lower()
                 distance = float(input("Enter distance (in inches): "))
                 RPM = int(input("Enter RPM: "))
                 rotate_motor(motor, direction, distance, RPM)
