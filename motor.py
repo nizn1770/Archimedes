@@ -90,35 +90,51 @@ def cleanup_motors():
 
 def rotate_motor(motor, direction, distance, rpm):
     """
-    Rotates the specified motor in the given direction for a set distance at a specified RPM.
-    - Converts distance to step count based on motor parameters.
-    - Sets direction based on user input.
-    - Executes motor steps unless an emergency stop is triggered.
+    Rotates the specified motor for a given distance at a specific speed (RPM) with ramp-up only.
+    - motor: Identifier ('x', 'y', 'z')
+    - direction: 'l' (left), 'r' (right), 'u' (up), 'd' (down)
+    - distance: Distance in inches
+    - rpm: Rotational speed in revolutions per minute
+
+    The function calculates the required number of steps, applies a ramp-up phase followed by
+    constant speed, and sends PWM signals accordingly. No ramp-down is performed.
     """
-    # global emergency_stop
-    # if emergency_stop:
-    #     return
-    
+    # Retrieve motor control pins and parameters
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
-    GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u', 'i'] else GPIO.HIGH)  # Set motor direction
 
-    total_steps = int(distance * steps * pitch)  # Calculate total steps needed
-    frequency = rpm * steps / 60  # Convert RPM to step frequency
-    SLEEP_TIME = 1 / (frequency * 2)  # Calculate delay between steps
+    # Set motor direction based on input ('l' and 'u' -> LOW, 'r' and 'd' -> HIGH)
+    GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u', 'o'] else GPIO.HIGH)
 
-    print(f"frequency: {frequency} steps/s Sleep time: {SLEEP_TIME} seconds total_steps: {total_steps}")
+    # Calculate total steps needed based on distance and pitch
+    total_steps = int(distance * steps * pitch)
+    target_frequency = rpm * steps / 60  # Convert RPM to step frequency (steps per second)
 
-    for step in range(total_steps):
-        # if emergency_stop:
-        #     break
-        if step % (steps*pitch) == 0:
-            print(f"Motor {motor} traveled {step / (steps * pitch)} inches in direction {direction}")
+    # Define ramp parameters (fixed ramp time in seconds for ramp-up)
+    RAMP_TIME = 0.5  # Time for ramp-up (adjust as needed)
+    ramp_steps = int(target_frequency * RAMP_TIME)  # Steps for ramp-up
+    ramp_steps = max(1, min(ramp_steps, 200))  # Cap between 1 and 200 steps
 
-        GPIO.output(pwm_pin, GPIO.HIGH)  # Activate PWM pin
-        time.sleep(SLEEP_TIME) 
-        GPIO.output(pwm_pin, GPIO.LOW)  # Deactivate PWM pin
-        time.sleep(SLEEP_TIME)
-    print(f"Motor {motor} traveled {total_steps / (steps * pitch)} inches in direction {direction}")
+    # Calculate frequency increment for ramp-up
+    frequency_increment = target_frequency / ramp_steps if ramp_steps > 0 else target_frequency
+
+    # Ramp-up phase
+    for step in range(ramp_steps):
+        current_frequency = frequency_increment * (step + 1)
+        sleep_time = 1 / (current_frequency * 2)  # Calculate delay for step signal
+        GPIO.output(pwm_pin, GPIO.HIGH)  # Step signal ON
+        time.sleep(sleep_time)
+        GPIO.output(pwm_pin, GPIO.LOW)  # Step signal OFF
+        time.sleep(sleep_time)
+
+    # Constant speed phase
+    constant_steps = total_steps - ramp_steps  # Steps at full speed
+    if constant_steps > 0:
+        sleep_time = 1 / (target_frequency * 2)  # Sleep time for target frequency
+        for _ in range(constant_steps):
+            GPIO.output(pwm_pin, GPIO.HIGH)  # Step signal ON
+            time.sleep(sleep_time)
+            GPIO.output(pwm_pin, GPIO.LOW)  # Step signal OFF
+            time.sleep(sleep_time)
 
 def move_actuator(direction):
     """
