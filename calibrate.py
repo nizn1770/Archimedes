@@ -115,7 +115,10 @@ def rotate_motor(motor, direction, distance, rpm):
     target_frequency = rpm * steps / 60  # Convert RPM to step frequency (steps per second)
 
     # Define ramp parameters (fixed ramp time in seconds for ramp-up)
-    RAMP_TIME = 0.5  # Time for ramp-up (adjust as needed)
+    if motor == "x":
+        RAMP_TIME = 1.5
+    else:
+        RAMP_TIME = 0.5  # Time for ramp-up (adjust as needed)
     ramp_steps = int(target_frequency * RAMP_TIME)  # Steps for ramp-up
     ramp_steps = max(1, min(ramp_steps, 200))  # Cap between 1 and 200 steps
 
