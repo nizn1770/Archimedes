@@ -184,7 +184,7 @@ def return_to_home(x_len, y_len):
     move_head("o")  # Raise the cutting head
     move_actuator("i")  # Retract actuator
     
-    rotate_motor("y", "u", y_len, config.Y_RPM)  # Move Y-axis back to home
+    rotate_motor("y", "u", config.MAX_VERTICAL, config.Y_RPM)  # Move Y-axis back to home
     rotate_motor("x", "l", x_len, config.X_RPM)  # Move X-axis back to home
     
 
