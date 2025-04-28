@@ -106,7 +106,9 @@ def rotate_motor(motor, direction, distance, rpm):
     GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u', 'o'] else GPIO.HIGH)
 
     # Calculate total steps needed based on distance and pitch
+
     total_steps = int(distance * steps * pitch)
+    print(f"Total steps for {motor} motor: {total_steps}")
     target_frequency = rpm * steps / 60  # Convert RPM to step frequency (steps per second)
 
     # Define ramp parameters (fixed ramp time in seconds for ramp-up)
@@ -208,7 +210,8 @@ def main():
             x_len = int(input("Enter the length of the X cut in inches: "))  # Get X cut length from user
             y_len = int(input("Enter the length of the Y cut in inches: "))  # Get Y cut length from user
 
-
+            print(f"Cutting {x_len} inches in X and {y_len} inches in Y")
+            print(f"Moving down to height of cut...")
             rotate_motor("y", "d", config.MAX_VERTICAL - y_len, config.Y_RPM)
             move_actuator("o")  # Extend actuator
             move_head("i")  # Lower cutting head
