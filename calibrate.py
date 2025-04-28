@@ -95,14 +95,14 @@ def init_motors():
 
 def rotate_motor(motor, direction, distance, rpm):
     """
-    Rotates the specified motor for a given distance at a specific speed (RPM) with ramping.
+    Rotates the specified motor for a given distance at a specific speed (RPM) with RPM-dependent ramping.
     - motor: Identifier ('x', 'y', 'z')
     - direction: 'l' (left), 'r' (right), 'u' (up), 'd' (down)
     - distance: Distance in inches
     - rpm: Rotational speed in revolutions per minute
 
-    The function calculates the required number of steps, applies ramp-up and ramp-down phases,
-    and sends PWM signals accordingly.
+    The function calculates the required number of steps, applies ramp-up and ramp-down phases
+    with duration based on RPM, and sends PWM signals accordingly.
     """
     # Retrieve motor control pins and parameters
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
@@ -114,13 +114,13 @@ def rotate_motor(motor, direction, distance, rpm):
     total_steps = int(distance * steps * pitch)
     target_frequency = rpm * steps / 60  # Convert RPM to step frequency (steps per second)
 
-    # Define ramp parameters
-    ramp_steps = min(1000, total_steps // 10)  # Use 10% of total steps or 100 steps, whichever is smaller
-    if ramp_steps == 0:  # Ensure at least 1 step for very small movements
-        ramp_steps = 1
+    # Define ramp parameters (fixed ramp time in seconds)
+    RAMP_TIME = 0.5  # Time for ramp-up or ramp-down (adjust as needed)
+    ramp_steps = int(target_frequency * RAMP_TIME)  # Steps for ramp-up or ramp-down
+    ramp_steps = max(1, min(ramp_steps, 200))  # Cap between 1 and 200 steps
 
     # Calculate frequency increment for ramp-up and ramp-down
-    frequency_increment = target_frequency / ramp_steps
+    frequency_increment = target_frequency / ramp_steps if ramp_steps > 0 else target_frequency
 
     # Ramp-up phase
     for step in range(ramp_steps):
@@ -151,7 +151,6 @@ def rotate_motor(motor, direction, distance, rpm):
         time.sleep(sleep_time)
         GPIO.output(pwm_pin, GPIO.LOW)  # Step signal OFF
         time.sleep(sleep_time)
-
 
 def move_actuator(direction):
     """
