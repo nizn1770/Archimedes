@@ -43,6 +43,8 @@ else:
 
     GPIO = GPIO_Mock()  # Use mock GPIO when not on Pi
 
+# Global PWM object for actuator
+ACTUATOR_PWM = None
 
 def init_motors():
     """
@@ -55,7 +57,7 @@ def init_motors():
     GPIO.setmode(GPIO.BOARD)
     GPIO.setwarnings(False)
 
-    global MOTOR_PINS
+    global MOTOR_PINS, ACTUATOR_PWM
     MOTOR_PINS = {
         "x": (config.X_DIR_PIN, config.X_PWM_PIN, config.X_STEPS_PER_REV, config.X_PITCH),
         "y": (config.Y_DIR_PIN, config.Y_PWM_PIN, config.Y_STEPS_PER_REV, config.Y_PITCH),
@@ -72,25 +74,10 @@ def init_motors():
     GPIO.setup(config.A_FOR_PIN, GPIO.OUT)
     GPIO.setup(config.A_REV_PIN, GPIO.OUT)
 
-    pwm = GPIO.PWM(config.A_PWM_PIN, 100)  # Create PWM object for actuator
-    pwm.start(25)  # Start PWM signal for actuator motor at 25% duty cycle
-
-    # Start PWM signal for actuator motor at a fixed frequency
-    #GPIO.PWM(config.A_PWM_PIN, config.A_FREQ).start(25)
-
-
-# def listen_for_stop():
-#     """
-#     Listens for the 'q' key press to trigger an emergency stop.
-#     - When 'q' is pressed, sets `emergency_stop` to True.
-#     - Cleans up GPIO before terminating the program.
-#     """
-#     global emergency_stop
-#     keyboard.wait("q")  # Wait until 'q' is pressed
-#     emergency_stop = True  # Set emergency stop flag
-#     print("Emergency stop activated. Exiting...")
-#     GPIO.cleanup()  # Clean up GPIO pins before exiting
-#     exit()  # Terminate the program
+    # Initialize and start PWM for actuator at 25% duty cycle
+    ACTUATOR_PWM = GPIO.PWM(config.A_PWM_PIN, config.A_FREQ)
+    ACTUATOR_PWM.start(25)  # Start PWM at 25% duty cycle
+    print(f"Started PWM on pin {config.A_PWM_PIN} with frequency {config.A_FREQ} Hz, 25% duty cycle")
 
 
 def rotate_motor(motor, direction, distance, rpm):
@@ -146,25 +133,35 @@ def rotate_motor(motor, direction, distance, rpm):
 
 def move_actuator(direction):
     """
-    Moves the actuator in or out based on the direction.
+    Moves the actuator in or out based on the direction with continuous PWM.
     - direction: 'i' (in) or 'o' (out)
+    - duration: Time to run the actuator (seconds, default 1.0)
 
-    The function sets the appropriate control pins to move the actuator.
+    The function sets the direction pins for the specified duration while the PWM signal
+    remains running continuously.
     """
-    # global emergency_stop
-    # if emergency_stop:  # Stop execution if emergency stop is activated
-    #     return
+    global ACTUATOR_PWM
 
-    # Set actuator movement direction
-    if direction == "o":
-        GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
-        GPIO.output(config.A_REV_PIN, GPIO.LOW)
-    elif direction == "i":
-        GPIO.output(config.A_FOR_PIN, GPIO.LOW)
-        GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
-    else:
+    if direction not in ["i", "o"]:
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
+
+    if ACTUATOR_PWM is None:
+        print(f"Error: PWM not initialized for pin {config.A_PWM_PIN}")
+        return
+
+    try:
+        # Set actuator movement direction
+        if direction == "o":
+            GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
+            GPIO.output(config.A_REV_PIN, GPIO.LOW)
+        else:  # direction == "i"
+            GPIO.output(config.A_FOR_PIN, GPIO.LOW)
+            GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
+            
+
+    except Exception as e:
+        print(f"Error in move_actuator: {e}")
 
 
 def main():
