@@ -52,7 +52,7 @@ def init_motors():
     - Configures GPIO mode and suppresses warnings.
     - Stores motor parameters (direction pin, PWM pin, steps per revolution, pitch) in a dictionary.
     - Sets the motor and actuator pins as output.
-    - Starts the actuator's PWM signal at 25% duty cycle.
+    - Starts the actuator's PWM signal at 25% duty cycle and leaves it running.
     """
     GPIO.setmode(GPIO.BOARD)
     GPIO.setwarnings(False)

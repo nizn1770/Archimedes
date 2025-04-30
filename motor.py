@@ -69,7 +69,7 @@ def init_motors():
     GPIO.setup(config.A_FOR_PIN, GPIO.OUT)  # Actuator forward pin setup
     GPIO.setup(config.A_REV_PIN, GPIO.OUT)  # Actuator reverse pin setup
 
-    GPIO.PWM(config.A_PWM_PIN, config.A_FREQ).start(25)  # Start actuator PWM at 25% duty cycle
+    GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
 
 def cleanup_motors():
     """
@@ -158,7 +158,7 @@ def move_actuator(direction):
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
     
-    for _ in range(5):
+    for _ in range(13):
         time.sleep(1)
         print("Actuator moving...")
 
