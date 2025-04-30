@@ -69,15 +69,11 @@ def init_motors():
         GPIO.setup(dir_pin, GPIO.OUT)
         GPIO.setup(pwm_pin, GPIO.OUT)
 
-    # Set up actuator control pins as output
-    GPIO.setup(config.A_PWM_PIN, GPIO.OUT)
-    GPIO.setup(config.A_FOR_PIN, GPIO.OUT)
-    GPIO.setup(config.A_REV_PIN, GPIO.OUT)
+    GPIO.setup(config.A_PWM_PIN, GPIO.OUT)  # Actuator PWM pin setup
+    GPIO.setup(config.A_FOR_PIN, GPIO.OUT)  # Actuator forward pin setup
+    GPIO.setup(config.A_REV_PIN, GPIO.OUT)  # Actuator reverse pin setup
 
-    # Initialize and start PWM for actuator at 25% duty cycle
-    ACTUATOR_PWM = GPIO.PWM(config.A_PWM_PIN, config.A_FREQ)
-    ACTUATOR_PWM.start(25)  # Start PWM at 25% duty cycle
-    print(f"Started PWM on pin {config.A_PWM_PIN} with frequency {config.A_FREQ} Hz, 25% duty cycle")
+    GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
 
 
 def rotate_motor(motor, direction, distance, rpm):
