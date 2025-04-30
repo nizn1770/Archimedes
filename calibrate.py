@@ -142,9 +142,7 @@ def move_actuator(direction):
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
 
-    if ACTUATOR_PWM is None:
-        print(f"Error: PWM not initialized for pin {config.A_PWM_PIN}")
-        return
+    
 
     try:
         # Set actuator movement direction
