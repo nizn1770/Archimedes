@@ -99,16 +99,18 @@ def main():
     init_motors()  
 
     try:
-        # Start the motor movement in separate threads
-        x_thread = threading.Thread(target=move_x)
-        y_thread = threading.Thread(target=move_y)
+        # # Start the motor movement in separate threads
+        # x_thread = threading.Thread(target=move_x)
+        # y_thread = threading.Thread(target=move_y)
 
-        x_thread.start()
-        y_thread.start()
+        # x_thread.start()
+        # y_thread.start()
 
-        # Wait for both threads to finish (they won't in this case)
-        x_thread.join()
-        y_thread.join()
+        # # Wait for both threads to finish (they won't in this case)
+        # x_thread.join()
+        # y_thread.join()
+
+        move_x()
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
