@@ -168,7 +168,10 @@ def move_actuator(direction):
                     elif direction == "o":  # direction == "i"
                         GPIO.output(config.A_FOR_PIN, GPIO.LOW)
                         GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
-
+                if ACTUATOR_LOC == 0:
+                    ACTUATOR_LOC = 1
+                else:
+                    ACTUATOR_LOC = 0
             GPIO.output(config.A_FOR_PIN, GPIO.LOW)  # Stop actuator movement
             GPIO.output(config.A_REV_PIN, GPIO.LOW)  # Stop actuator movement
             GPIO.output(config.A_PWM_PIN, GPIO.LOW)  # Stop PWM signal
