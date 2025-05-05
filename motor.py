@@ -155,19 +155,19 @@ def move_actuator(direction):
         return
 
     else:
-
         try:
             GPIO.output(config.A_PWM_PIN, GPIO.HIGH)  # Start PWM signal
-            for _ in range(13):
-                time.sleep(1)
-                print("Actuator moving...")
-                # Set actuator movement direction
-                if direction == "i" and ACTUATOR_LOC == 1:
-                    GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
-                    GPIO.output(config.A_REV_PIN, GPIO.LOW)
-                elif direction == "o" and ACTUATOR_LOC == 0:  # direction == "i"
-                    GPIO.output(config.A_FOR_PIN, GPIO.LOW)
-                    GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
+            if direction == "i" and ACTUATOR_LOC == 1 or direction == "o" and ACTUATOR_LOC == 0:
+                for _ in range(13):
+                    time.sleep(1)
+                    print("Actuator moving...")
+                    # Set actuator movement direction
+                    if direction == "i":
+                        GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
+                        GPIO.output(config.A_REV_PIN, GPIO.LOW)
+                    elif direction == "o":  # direction == "i"
+                        GPIO.output(config.A_FOR_PIN, GPIO.LOW)
+                        GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
 
             GPIO.output(config.A_FOR_PIN, GPIO.LOW)  # Stop actuator movement
             GPIO.output(config.A_REV_PIN, GPIO.LOW)  # Stop actuator movement
