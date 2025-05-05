@@ -2,7 +2,46 @@ import time
 import config
 #import keyboard
 import threading
-import RPi.GPIO as GPIO
+
+# Set this to True when running on Raspberry Pi
+RUN_ON_PI = True
+
+# Conditionally import RPi.GPIO
+if RUN_ON_PI:
+    import RPi.GPIO as GPIO
+else:
+    class GPIO_Mock:
+        BOARD = "BOARD"
+        OUT = "OUT"
+        LOW = "LOW"
+        HIGH = "HIGH"
+
+        def setmode(self, mode):
+            print(f"Mock GPIO: Set mode {mode}")
+            
+
+        def setwarnings(self, flag):
+            print(f"Mock GPIO: Set warnings {flag}")
+
+        def setup(self, pin, mode):
+            print(f"Mock GPIO: Setup pin {pin} as {mode}")
+
+        def output(self, pin, state):
+            #print(f"Mock GPIO: Set pin {pin} to {state}")
+            return 1
+
+        def PWM(self, pin, freq):
+            print(f"Mock GPIO: Start PWM on pin {pin} with frequency {freq}")
+            return self.MockPWM()
+
+        def cleanup(self):
+            print("Mock GPIO: Cleanup")
+
+        class MockPWM:
+            def start(self, duty_cycle):
+                print(f"Mock PWM: Started with duty cycle {duty_cycle}")
+
+    GPIO = GPIO_Mock()  # Use mock GPIO when not on Pi
 
 def init_motors():
     """
@@ -16,6 +55,8 @@ def init_motors():
     GPIO.setwarnings(False)  # Suppress GPIO warnings
 
     global MOTOR_PINS
+    global ACTUATOR_LOC
+    ACTUATOR_LOC = 0
     MOTOR_PINS = {
         "x": (config.X_DIR_PIN, config.X_PWM_PIN, config.X_STEPS_PER_REV, config.X_PITCH),
         "y": (config.Y_DIR_PIN, config.Y_PWM_PIN, config.Y_STEPS_PER_REV, config.Y_PITCH),
@@ -106,22 +147,38 @@ def move_actuator(direction):
     # global emergency_stop
     # if emergency_stop:
     #     return
-    
-    if direction == "o":
-        print("Moving actuator out")
-        GPIO.output(config.A_FOR_PIN, GPIO.HIGH)
-        GPIO.output(config.A_REV_PIN, GPIO.LOW)
-    elif direction == "i":
-        print("Moving actuator in")
-        GPIO.output(config.A_FOR_PIN, GPIO.LOW)
-        GPIO.output(config.A_REV_PIN, GPIO.HIGH)
-    else:
+
+    global ACTUATOR_LOC
+
+    if direction not in ["i", "o"]:
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
-    
-    for _ in range(13):
-        time.sleep(1)
-        print("Actuator moving...")
+
+    else:
+        try:
+            GPIO.output(config.A_PWM_PIN, GPIO.HIGH)  # Start PWM signal
+            if direction == "i" and ACTUATOR_LOC == 1 or direction == "o" and ACTUATOR_LOC == 0:
+                for _ in range(13):
+                    time.sleep(1)
+                    print("Actuator moving...")
+                    # Set actuator movement direction
+                    if direction == "i":
+                        GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
+                        GPIO.output(config.A_REV_PIN, GPIO.LOW)
+                    elif direction == "o":  # direction == "i"
+                        GPIO.output(config.A_FOR_PIN, GPIO.LOW)
+                        GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
+                if ACTUATOR_LOC == 0:
+                    ACTUATOR_LOC = 1
+                else:
+                    ACTUATOR_LOC = 0
+            GPIO.output(config.A_FOR_PIN, GPIO.LOW)  # Stop actuator movement
+            GPIO.output(config.A_REV_PIN, GPIO.LOW)  # Stop actuator movement
+            GPIO.output(config.A_PWM_PIN, GPIO.LOW)  # Stop PWM signal
+            
+
+        except Exception as e:
+            print(f"Error in move_actuator: {e}")
 
 def move_head(direction):
     """
@@ -147,34 +204,7 @@ def return_to_home(x_len, y_len):
     
     rotate_motor("y", "u", config.MAX_VERTICAL, config.Y_RPM)  # Move Y-axis back to home
     rotate_motor("x", "l", x_len, config.X_RPM)  # Move X-axis back to home
-
-def return_to_home_from_hor_cut(y_len):
-    """
-    Returns the machine to its home position from the horizontal cut location.
-    - Assumes head is lowered and actuator is extended.
-    - Raises head, retracts actuator, moves Y-axis to home, and X-axis to home.
-    """
-    print("Returning to home from horizontal cut...")
-    move_actuator("i")  # Retract actuator
-    rotate_motor("y", "u", config.MAX_VERTICAL - y_len, config.Y_RPM)  # Move Y-axis back to home
-    rotate_motor("x", "l", config.MAX_HORIZONTAL, config.X_RPM)  # Move X-axis back to home    
-
-def make_hor_cut(y_len):
-    rotate_motor("y", "d", config.MAX_VERTICAL - y_len, config.Y_RPM)
-    move_actuator("o")  # Extend actuator
-    move_head("i")  # Lower cutting head
-
-    rotate_motor("x", "r", config.MAX_HORIZONTAL, config.X_RPM)
-
-    move_head("o")  # Raise cutting head
-
-def make_ver_cut(x_len, y_len):
-    rotate_motor("x", "l", config.MAX_HORIZONTAL - x_len, config.X_RPM)
-    move_actuator("i")  # Retract actuator
-    move_head("i")  # Lower cutting head
-
-    rotate_motor("y", "d", y_len, config.Y_RPM)
-
+    
 
 def main():
     """

@@ -44,7 +44,7 @@ else:
     GPIO = GPIO_Mock()  # Use mock GPIO when not on Pi
 
 # Global PWM object for actuator
-ACTUATOR_PWM = None
+ACTUATOR_LOC = 0
 
 def init_motors():
     """
@@ -69,11 +69,12 @@ def init_motors():
         GPIO.setup(dir_pin, GPIO.OUT)
         GPIO.setup(pwm_pin, GPIO.OUT)
 
+    GPIO.setup(config.A_VAL_PIN, GPIO.OUT)  # Actuator value pin setup
     GPIO.setup(config.A_PWM_PIN, GPIO.OUT)  # Actuator PWM pin setup
     GPIO.setup(config.A_FOR_PIN, GPIO.OUT)  # Actuator forward pin setup
     GPIO.setup(config.A_REV_PIN, GPIO.OUT)  # Actuator reverse pin setup
 
-    GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
+    GPIO.output(config.A_VAL_PIN, GPIO.HIGH)
 
 
 def rotate_motor(motor, direction, distance, rpm):
@@ -136,26 +137,34 @@ def move_actuator(direction):
     The function sets the direction pins for the specified duration while the PWM signal
     remains running continuously.
     """
-    global ACTUATOR_PWM
+    global ACTUATOR_LOC
 
     if direction not in ["i", "o"]:
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
 
-    
+    else:
 
-    try:
-        # Set actuator movement direction
-        if direction == "o":
-            GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
-            GPIO.output(config.A_REV_PIN, GPIO.LOW)
-        else:  # direction == "i"
-            GPIO.output(config.A_FOR_PIN, GPIO.LOW)
-            GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
+        try:
+            GPIO.output(config.A_PWM_PIN, GPIO.HIGH)  # Start PWM signal
+            for _ in range(13):
+                time.sleep(1)
+                print("Actuator moving...")
+                # Set actuator movement direction
+                if direction == "i":
+                    GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
+                    GPIO.output(config.A_REV_PIN, GPIO.LOW)
+                elif direction == "o":  # direction == "i"
+                    GPIO.output(config.A_FOR_PIN, GPIO.LOW)
+                    GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
+
+            GPIO.output(config.A_FOR_PIN, GPIO.LOW)  # Stop actuator movement
+            GPIO.output(config.A_REV_PIN, GPIO.LOW)  # Stop actuator movement
+            GPIO.output(config.A_PWM_PIN, GPIO.LOW)  # Stop PWM signal
             
 
-    except Exception as e:
-        print(f"Error in move_actuator: {e}")
+        except Exception as e:
+            print(f"Error in move_actuator: {e}")
 
 
 def main():
@@ -173,6 +182,7 @@ def main():
 
     try:
         while True:
+            invalid = False
             motor = input("Enter motor (x/y/z/a): ").lower()
 
             # if emergency_stop:  # Stop execution if emergency stop is activated
@@ -182,10 +192,20 @@ def main():
                 direction = input("Enter direction of actuator (i/o): ").lower()
                 move_actuator(direction)
             elif motor in MOTOR_PINS:  # Motor movement
-                direction = input("Enter direction (l/r/u/d/i/o): ").lower()
-                distance = float(input("Enter distance (in inches): "))
-                RPM = int(input("Enter RPM: "))
-                rotate_motor(motor, direction, distance, RPM)
+                if motor == "x":
+                    direction = input("Enter direction (l/r): ").lower()
+                elif motor == "y":
+                    direction = input("Enter direction (u/d): ").lower()
+                elif motor == "z":
+                    direction = input("Enter direction (u/d): ").lower()
+                else:
+                    print("Invalid motor. Use 'x', 'y', or 'z'.")
+                    invalid = True
+                    continue
+                if not invalid:
+                    distance = float(input("Enter distance (in inches): "))
+                    RPM = int(input("Enter RPM: "))
+                    rotate_motor(motor, direction, distance, RPM)
             else:
                 print("Invalid motor. Use 'x', 'y', 'z', or 'a'.")
                 continue
@@ -193,6 +213,7 @@ def main():
             time.sleep(1)  # Pause before next command
 
     except KeyboardInterrupt:  # Handle user interrupt (Ctrl+C)
+        GPIO.output(config.A_PWM_PIN, GPIO.LOW)  # Stop PWM signal
         print("Exiting")
         GPIO.cleanup()  # Clean up GPIO before exiting
 
