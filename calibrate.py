@@ -213,6 +213,7 @@ def main():
             time.sleep(1)  # Pause before next command
 
     except KeyboardInterrupt:  # Handle user interrupt (Ctrl+C)
+        GPIO.output(config.A_PWM_PIN, GPIO.LOW)  # Stop PWM signal
         print("Exiting")
         GPIO.cleanup()  # Clean up GPIO before exiting
 
