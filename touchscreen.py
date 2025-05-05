@@ -39,14 +39,9 @@ class Application(tk.Tk):
         loading_window.geometry("800x480")
         loading_window.title("Initializing Archimedes")
 
-        loading LIMINAL_SPACE = tk.Toplevel(self)
-        LIMINAL_SPACE.attributes("-topmost", True)
-        LIMINAL_SPACE.geometry("800x480")
-        LIMINAL_SPACE.title("Initializing Archimedes")
-
-        LIMINAL_SPACE.columnconfigure(0, weight=1)
-        LIMINAL_SPACE.rowconfigure(0, weight=1)
-        LIMINAL_SPACE.rowconfigure(1, weight=1)
+        loading_window.columnconfigure(0, weight=1)
+        loading_window.rowconfigure(0, weight=1)
+        loading_window.rowconfigure(1, weight=1)
 
         try:
             logo_image = PhotoImage(file=config.LOGO_IMAGE)
