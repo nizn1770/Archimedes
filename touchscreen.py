@@ -31,7 +31,7 @@ class Application(tk.Tk):
         self.loading_screen = self.create_loading_screen()
         self.loading_screen.deiconify()
 
-        self.after(2000, self.initialize_ui)
+        self.after(10000, self.initialize_ui)
 
     def create_loading_screen(self):
         loading_window = tk.Toplevel(self)
@@ -44,9 +44,7 @@ class Application(tk.Tk):
         loading_window.rowconfigure(1, weight=1)
 
         try:
-            logo_image = PhotoImage(file=config.LOGO_IMAGE)
-            logo_image_label = tk.Label(loading_window, image=logo_image)
-            logo_image_label.image = logo_image
+            logo_image_label = PhotoImage(file=config.LOGO_IMAGE)
             logo_image_label.grid(row=0, column=0, sticky="nsew")
         except tk.TclError:
             self.logger.error("Failed to load logo image")
@@ -100,7 +98,7 @@ class Application(tk.Tk):
         submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
         submit.grid(row=2, column=0, sticky="nsew")
 
-        self.keyboard = KeyBoard(self, [self.hor, self.vert])
+        self.keyboard = KeyBoard(self, [self.hor, self.vert], self.logger)
         self.keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
 
     def send_cuts(self):
@@ -388,8 +386,10 @@ class InputMeasure(ttk.Frame):
         self.frac_label.grid(row=2, column=1, sticky="n")
 
 class KeyBoard(ttk.Frame):
-    def __init__(self, parent, input_measures):
+    def __init__(self, parent, input_measures, logger):
         super().__init__(parent)
+
+        self.logger = logger
         
         self.input_measures = input_measures
         self.active_entry = input_measures[0].inch
