@@ -55,6 +55,8 @@ def init_motors():
     GPIO.setwarnings(False)  # Suppress GPIO warnings
 
     global MOTOR_PINS
+    global ACTUATOR_LOC
+    ACTUATOR_LOC = 0
     MOTOR_PINS = {
         "x": (config.X_DIR_PIN, config.X_PWM_PIN, config.X_STEPS_PER_REV, config.X_PITCH),
         "y": (config.Y_DIR_PIN, config.Y_PWM_PIN, config.Y_STEPS_PER_REV, config.Y_PITCH),
@@ -145,22 +147,35 @@ def move_actuator(direction):
     # global emergency_stop
     # if emergency_stop:
     #     return
-    
-    if direction == "i":
-        print("Moving actuator in")
-        GPIO.output(config.A_FOR_PIN, GPIO.HIGH)
-        GPIO.output(config.A_REV_PIN, GPIO.LOW)
-    elif direction == "o":
-        print("Moving actuator out")
-        GPIO.output(config.A_FOR_PIN, GPIO.LOW)
-        GPIO.output(config.A_REV_PIN, GPIO.HIGH)
-    else:
+
+    global ACTUATOR_LOC
+
+    if direction not in ["i", "o"]:
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
-    
-    for _ in range(13):
-        time.sleep(1)
-        print("Actuator moving...")
+
+    else:
+
+        try:
+            GPIO.output(config.A_PWM_PIN, GPIO.HIGH)  # Start PWM signal
+            for _ in range(13):
+                time.sleep(1)
+                print("Actuator moving...")
+                # Set actuator movement direction
+                if direction == "i" and ACTUATOR_LOC == 1:
+                    GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
+                    GPIO.output(config.A_REV_PIN, GPIO.LOW)
+                elif direction == "o" and ACTUATOR_LOC == 0:  # direction == "i"
+                    GPIO.output(config.A_FOR_PIN, GPIO.LOW)
+                    GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
+
+            GPIO.output(config.A_FOR_PIN, GPIO.LOW)  # Stop actuator movement
+            GPIO.output(config.A_REV_PIN, GPIO.LOW)  # Stop actuator movement
+            GPIO.output(config.A_PWM_PIN, GPIO.LOW)  # Stop PWM signal
+            
+
+        except Exception as e:
+            print(f"Error in move_actuator: {e}")
 
 def move_head(direction):
     """

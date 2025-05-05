@@ -44,7 +44,7 @@ else:
     GPIO = GPIO_Mock()  # Use mock GPIO when not on Pi
 
 # Global PWM object for actuator
-ACTUATOR_PWM = None
+ACTUATOR_LOC = 0
 
 def init_motors():
     """
@@ -69,11 +69,12 @@ def init_motors():
         GPIO.setup(dir_pin, GPIO.OUT)
         GPIO.setup(pwm_pin, GPIO.OUT)
 
+    GPIO.setup(config.A_VAL_PIN, GPIO.OUT)  # Actuator value pin setup
     GPIO.setup(config.A_PWM_PIN, GPIO.OUT)  # Actuator PWM pin setup
     GPIO.setup(config.A_FOR_PIN, GPIO.OUT)  # Actuator forward pin setup
     GPIO.setup(config.A_REV_PIN, GPIO.OUT)  # Actuator reverse pin setup
 
-    GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
+    GPIO.output(config.A_VAL_PIN, GPIO.HIGH)
 
 
 def rotate_motor(motor, direction, distance, rpm):
@@ -136,26 +137,34 @@ def move_actuator(direction):
     The function sets the direction pins for the specified duration while the PWM signal
     remains running continuously.
     """
-    global ACTUATOR_PWM
+    global ACTUATOR_LOC
 
     if direction not in ["i", "o"]:
         print("Invalid direction. Use 'i' for in or 'o' for out.")
         return
 
-    
+    else:
 
-    try:
-        # Set actuator movement direction
-        if direction == "i":
-            GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
-            GPIO.output(config.A_REV_PIN, GPIO.LOW)
-        else:  # direction == "i"
-            GPIO.output(config.A_FOR_PIN, GPIO.LOW)
-            GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
+        try:
+            GPIO.output(config.A_PWM_PIN, GPIO.HIGH)  # Start PWM signal
+            for _ in range(13):
+                time.sleep(1)
+                print("Actuator moving...")
+                # Set actuator movement direction
+                if direction == "i" and ACTUATOR_LOC == 1:
+                    GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
+                    GPIO.output(config.A_REV_PIN, GPIO.LOW)
+                elif direction == "o" and ACTUATOR_LOC == 0:  # direction == "i"
+                    GPIO.output(config.A_FOR_PIN, GPIO.LOW)
+                    GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
+
+            GPIO.output(config.A_FOR_PIN, GPIO.LOW)  # Stop actuator movement
+            GPIO.output(config.A_REV_PIN, GPIO.LOW)  # Stop actuator movement
+            GPIO.output(config.A_PWM_PIN, GPIO.LOW)  # Stop PWM signal
             
 
-    except Exception as e:
-        print(f"Error in move_actuator: {e}")
+        except Exception as e:
+            print(f"Error in move_actuator: {e}")
 
 
 def main():
