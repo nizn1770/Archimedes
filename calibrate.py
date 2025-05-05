@@ -146,7 +146,7 @@ def move_actuator(direction):
 
     try:
         # Set actuator movement direction
-        if direction == "o":
+        if direction == "i":
             GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
             GPIO.output(config.A_REV_PIN, GPIO.LOW)
         else:  # direction == "i"

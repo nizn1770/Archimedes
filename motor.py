@@ -146,12 +146,12 @@ def move_actuator(direction):
     # if emergency_stop:
     #     return
     
-    if direction == "o":
-        print("Moving actuator out")
+    if direction == "i":
+        print("Moving actuator in")
         GPIO.output(config.A_FOR_PIN, GPIO.HIGH)
         GPIO.output(config.A_REV_PIN, GPIO.LOW)
-    elif direction == "i":
-        print("Moving actuator in")
+    elif direction == "o":
+        print("Moving actuator out")
         GPIO.output(config.A_FOR_PIN, GPIO.LOW)
         GPIO.output(config.A_REV_PIN, GPIO.HIGH)
     else:
