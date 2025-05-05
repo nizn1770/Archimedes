@@ -1,40 +1,38 @@
-#import requests
-#import RPi.GPIO as GPIO
-import threading
-import time
-import tkinter as tk
-from tkinter import ttk
-from tkinter import PhotoImage
-from tkinter import messagebox
-from io import BytesIO
-
-
-GEOMETRY = "800x480"
 
 #MAX CUTS IN INCHES
-MAX_HORIZONTAL = 48
-MAX_VERTICAL = 48
+MAX_HORIZONTAL = 24
+MAX_VERTICAL = 24
 
 #MIN CUTS IN INCHES
-MIN_HORIZONTAL = 1
-MIN_VERTICAL = 1
+MIN_HORIZONTAL = 12
+MIN_VERTICAL = 12
+
+Z_JOG = 2
+
 
 #Machine pin set ups
 X_DIR_PIN = 11
 X_PWM_PIN = 13
-X_RPM = 100
+X_RPM = 50
 X_STEPS_PER_REV = 1000
 X_PITCH = 4
 
 Y_DIR_PIN = 15
 Y_PWM_PIN = 16
-Y_RPM = 100
+Y_RPM = 250
 Y_STEPS_PER_REV = 1000
 Y_PITCH = 5
 
 Z_DIR_PIN = 18
 Z_PWM_PIN = 22
+Z_RPM = 250
 Z_STEPS_PER_REV = 1000
+Z_PITCH = 1
+
+A_PWM_PIN = 33
+A_FOR_PIN = 36
+A_REV_PIN = 37
+A_FREQ = 100
 
 # motor_configs = {
 #         'x': {

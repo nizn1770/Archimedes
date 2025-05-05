@@ -1,16 +1,11 @@
 import sys
 import config
-#import motor
-#import requests
+import motor
 import threading
-import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 from tkinter import messagebox
-from io import BytesIO
-
-
 
 class Application(tk.Tk):
     def __init__(self, logger):
@@ -23,61 +18,71 @@ class Application(tk.Tk):
         self.bind("<Escape>", self.exit_fullscreen)
         self.bind("Q", self.quit_program)
 
-        self.vals = [0,0,0,0]
+        # Initialize motors
+        try:
+            motor.init_motors()
+            self.logger.info("Motors initialized")
+        except Exception as e:
+            self.logger.error(f"Motor initialization failed: {str(e)}")
+            messagebox.showerror("Initialization Error", f"Failed to initialize motors: {str(e)}")
+            sys.exit(1)
 
-        self.message_var = tk.StringVar(value="test")
-        self.cut_title = "test"
-        self.cut_message = "test"
-
+        self.cancel_flag = False
         self.loading_screen = self.create_loading_screen()
         self.loading_screen.deiconify()
+
+        self.after(2000, self.initialize_ui)
 
     def create_loading_screen(self):
         loading_window = tk.Toplevel(self)
         loading_window.attributes("-topmost", True)
-        loading_window.geometry(config.GEOMETRY)
+        loading_window.geometry("800x480")
         loading_window.title("Initializing Archimedes")
 
-        loading_window.columnconfigure(0, weight=1)
-        loading_window.rowconfigure(0, weight=1)
-        loading_window.rowconfigure(1, weight=1)
+        loading LIMINAL_SPACE = tk.Toplevel(self)
+        LIMINAL_SPACE.attributes("-topmost", True)
+        LIMINAL_SPACE.geometry("800x480")
+        LIMINAL_SPACE.title("Initializing Archimedes")
 
-        logo_image = PhotoImage(file=config.LOGO_IMAGE)
-        logo_image_label = tk.Label(loading_window, image=logo_image)
-        logo_image_label.grid(row=0, column=0, sticky="nsew")
+        LIMINAL_SPACE.columnconfigure(0, weight=1)
+        LIMINAL_SPACE.rowconfigure(0, weight=1)
+        LIMINAL_SPACE.rowconfigure(1, weight=1)
 
-        loading_label = tk.Label(loading_window, textvariable="Loading Archimedes...", font="Arial 24", anchor='center')
+        try:
+            logo_image = PhotoImage(file=config.LOGO_IMAGE)
+            logo_image_label = tk.Label(loading_window, image=logo_image)
+            logo_image_label.image = logo_image
+            logo_image_label.grid(row=0, column=0, sticky="nsew")
+        except tk.TclError:
+            self.logger.error("Failed to load logo image")
+            logo_image_label = tk.Label(loading_window, text="Archimedes", font="Arial 24")
+            logo_image_label.grid(row=0, column=0, sticky="nsew")
+
+        loading_label = tk.Label(loading_window, text="Loading Archimedes...", font="Arial 24", anchor='center')
         loading_label.grid(row=1, column=0, sticky="nsew")
 
         return loading_window
 
-
-
-    def initialize_machine():
-        motor.init_motors()
-        self.logger.info("Initializing motors")
-
-        time.sleep(10) ##sleep for 10 seconds for now to simulate motor initialization
-
-        #get the machine position from sd
-
-        #check to see if machine is in the right position
-        #if not, move to home position
-
-
-        #retrive blade hp from sd
-        
-        #check to see if blade is at good health
-
+    def initialize_ui(self):
         self.loading_screen.destroy()
         self.logger.info("Archimedes initialized")
-
+        self.attributes("-fullscreen", True)
+        self.message_var = tk.StringVar()
+        self.measure_init()
 
     def exit_fullscreen(self, event=None):
         self.attributes("-fullscreen", False)
     
     def quit_program(self, event=None):
+        self.logger.info("Quitting program")
+        self.cancel_flag = True
+        motor.cleanup_motors()
+        self.destroy()
         sys.exit(0)
+
+    def cancel_cut(self):
+        self.cancel_flag = True
+        self.logger.info("Cut canceled by user")
 
     def update_message(self, message):
         self.message_var.set(message)
@@ -89,7 +94,7 @@ class Application(tk.Tk):
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
-        
+
         self.hor = InputMeasure(self, "Horizontal")
         self.hor.grid(row=0, column=0, sticky="nsew")
         self.hor.inch.focus_set()
@@ -116,10 +121,7 @@ class Application(tk.Tk):
             self.wait_window(self.confirmation_window)
 
             if self.confirmation_response:
-                self.show_progress()
-                self.wait_window(self.progress_window)
-                messagebox.showinfo(self.cut_title, self.cut_message)
-                
+                self.show_cutting()
             else:
                 title = "Cut Canceled"
                 message = "The cut has been canceled."
@@ -128,7 +130,6 @@ class Application(tk.Tk):
         self.clear_entries()
         self.keyboard.reset_entry()
 
-        messagebox.showinfo("Returning to Home", "Returning Cut Head to Home.  Wait to retrieve and load")
 
     def confirm_cuts(self):
         self.confirmation_window = tk.Toplevel(self)
@@ -140,7 +141,7 @@ class Application(tk.Tk):
         self.confirmation_window.columnconfigure(1, weight=1)
         self.confirmation_window.rowconfigure(0, weight=1)
         self.confirmation_window.rowconfigure(1, weight=1)
-        self.confirmation_window.rowconfigure(2, weight=3)
+        self.confirmation_window.rowconfigure(2, weight=1)
 
         question_label = ttk.Label(self.confirmation_window, text="Is this the correct cut?", font="Arial 32", anchor='center')
         question_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
@@ -154,70 +155,136 @@ class Application(tk.Tk):
         cancelation_button = ttk.Button(self.confirmation_window, text="Cancel", command=lambda: self.confirmation_result(False))
         cancelation_button.grid(row=2, column=1, sticky="nsew")
 
-
     def confirmation_result(self, response):
         self.logger.info(f"Cut confirmation response: {response}")
         self.confirmation_response = response
         self.confirmation_window.destroy()
 
-
-    def show_progress(self):        
+    def show_cutting(self):
         self.cancel_flag = False
+        self.cutting_window = tk.Toplevel(self)
+        self.cutting_window.attributes("-topmost", True)
+        self.cutting_window.attributes("-fullscreen", True)
+        self.cutting_window.title("Cutting")
 
-        self.progress_window = tk.Toplevel(self)
-        self.progress_window.attributes("-topmost", True)
-        self.progress_window.attributes("-fullscreen", True)
-        self.progress_window.title("Cutting")
+        self.cutting_window.columnconfigure(0, weight=1)
+        self.cutting_window.columnconfigure(1, weight=1)
+        self.cutting_window.rowconfigure(0, weight=1)
+        self.cutting_window.rowconfigure(1, weight=1)
 
-        self.progress_window.columnconfigure(0, weight=1)
+        cutting_label = ttk.Label(self.cutting_window, text="Cutting in Progress", font="Arial 32", anchor="center")
+        cutting_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        self.progress_window.rowconfigure(0, weight=1)
-        self.progress_window.rowconfigure(1, weight=1)
-        self.progress_window.rowconfigure(2, weight=1)
-        self.progress_window.rowconfigure(3, weight=3)
+        cancel_button = ttk.Button(self.cutting_window, text="Cancel Cut", command=self.cancel_cut)
+        cancel_button.grid(row=1, column=0, columnspan=2, sticky="nsew")
 
-        progress_label = ttk.Label(self.progress_window, text="Cutting Board", font="Arial 32", anchor="center")
-        progress_label.grid(row=0, column=0, sticky="nsew")
-
-        cut_length = ttk.Label(self.progress_window, textvariable=self.message_var, font="Arial 24", anchor="center")
-        cut_length.grid(row=1, column=0, sticky="nsew")
-
-        self.progress_bar = ttk.Progressbar(self.progress_window, maximum=100)
-        self.progress_bar.grid(row=2, column=0, sticky="nsew")
-
-        cancel_button = ttk.Button(self.progress_window, text="Cancel Cut", command=lambda: self.cancel_process())
-        cancel_button.grid(row=3, column=0, sticky="nsew")
-
-        self.begin_progress()
-
-
-    def begin_progress(self):
-        self.cancel_flag = False
-        self.progress_bar["value"]=0
-        threading.Thread(target=self.cut).start()
-        self.logger.info("Starting Cut") 
+        threading.Thread(target=self.cut, daemon=True).start()
 
     def cut(self):
-        for i in range(50):
+        try:
+            x_len, y_len = self.horizontal_len, self.vertical_len
+
+            # Horizontal cut
+            self.logger.info("Executing horizontal cut")
+            motor.make_hor_cut(y_len)
             if self.cancel_flag:
-                self.cut_title = "Cut Canceled"
-                self.cut_message = "The cut has been canceled without completing."
-                break
-            else:
-                self.progress_bar.step(2)
-            time.sleep(0.1)
-        if not self.cancel_flag:
-            self.cut_title = "Cut Completed"
-            self.cut_message = "The cut has been completed successfully"
-        self.logger.info(f"{self.cut_title} - {self.cut_message}")
-        print("done")
-        self.progress_window.destroy()
+                self.logger.info("Canceling after horizontal cut")
+                motor.return_to_home_from_hor_cut(y_len)
+                self.after(0, lambda: self.cutting_window.destroy())
+                self.after(0, lambda: messagebox.showinfo("Cut Canceled", "The cut was canceled. Machine returned to home."))
+                return
 
+            self.cutting_window.destroy()
 
-    def cancel_process(self):
-        self.cancel_flag = True
-  
-       
+            # Prompt for scrap removal
+            scrap_event = threading.Event()
+            def show_scrap_prompt():
+                messagebox.showinfo("Remove Scrap", "Remove scrap piece of panel and press OK to continue...")
+                scrap_event.set()
+            self.after(0, show_scrap_prompt)
+            scrap_event.wait()
+
+            # Confirm continuation
+            self.continue_response = None
+            self.after(0, self.confirm_continue)
+            continue_event = threading.Event()
+            def wait_continue():
+                self.wait_window(self.continue_window)
+                continue_event.set()
+            self.after(0, wait_continue)
+            continue_event.wait()
+
+            if not self.continue_response or self.cancel_flag:
+                self.logger.info("Canceling after scrap removal")
+                motor.return_to_home_from_hor_cut(y_len)
+                self.after(0, lambda: messagebox.showinfo("Cut Canceled", "The cut was canceled. Machine returned to home."))
+                return
+
+            # Show cutting screen for vertical cut
+            self.cutting_window = tk.Toplevel(self)
+            self.cutting_window.attributes("-topmost", True)
+            self.cutting_window.attributes("-fullscreen", True)
+            self.cutting_window.title("Cutting")
+
+            self.cutting_window.columnconfigure(0, weight=1)
+            self.cutting_window.columnconfigure(1, weight=1)
+            self.cutting_window.rowconfigure(0, weight=1)
+            self.cutting_window.rowconfigure(1, weight=1)
+
+            cutting_label = ttk.Label(self.cutting_window, text="Cutting in Progress", font="Arial 32", anchor="center")
+            cutting_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+
+            cancel_button = ttk.Button(self.cutting_window, text="Cancel Cut", command=self.cancel_cut)
+            cancel_button.grid(row=1, column=0, columnspan=2, sticky="nsew")
+
+            # Vertical cut
+            self.logger.info("Executing vertical cut")
+            motor.make_ver_cut(x_len, y_len)
+            if self.cancel_flag:
+                self.logger.info("Canceling after vertical cut")
+                motor.return_to_home(x_len, y_len)
+                self.after(0, lambda: self.cutting_window.destroy())
+                self.after(0, lambda: messagebox.showinfo("Cut Canceled", "The cut was canceled. Machine returned to home."))
+                return
+
+            # Return to home
+            self.logger.info("Returning to home")
+            motor.return_to_home(x_len, y_len)
+
+            self.after(0, lambda: self.cutting_window.destroy())
+            self.after(0, lambda: messagebox.showinfo("Cut Completed", "The cut has been completed successfully"))
+
+        except Exception as e:
+            self.logger.error(f"Cut error: {str(e)}")
+            self.after(0, lambda: self.cutting_window.destroy())
+            self.after(0, lambda: messagebox.showerror("Cut Error", f"An error occurred during cutting: {str(e)}"))
+            motor.cleanup_motors()
+
+    def confirm_continue(self):
+        self.continue_window = tk.Toplevel(self)
+        self.continue_window.attributes("-topmost", True)
+        self.continue_window.attributes("-fullscreen", True)
+        self.continue_window.title("Continue Cut")
+
+        self.continue_window.columnconfigure(0, weight=1)
+        self.continue_window.columnconfigure(1, weight=1)
+        self.continue_window.rowconfigure(0, weight=1)
+        self.continue_window.rowconfigure(1, weight=1)
+
+        question_label = ttk.Label(self.continue_window, text="Continue with vertical cut?", font="Arial 32", anchor='center')
+        question_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+
+        confirmation_button = ttk.Button(self.continue_window, text="Confirm", command=lambda: self.continue_result(True))
+        confirmation_button.grid(row=1, column=0, sticky="nsew")
+
+        cancelation_button = ttk.Button(self.continue_window, text="Cancel", command=lambda: self.continue_result(False))
+        cancelation_button.grid(row=1, column=1, sticky="nsew")
+
+    def continue_result(self, response):
+        self.logger.info(f"Continue confirmation response: {response}")
+        self.continue_response = response
+        self.continue_window.destroy()
+
     def validate_inputs(self):
         self.valid_inputs = False
         self.get_vals()
@@ -227,17 +294,15 @@ class Application(tk.Tk):
         if self.numeric and not self.bad_cut_length:
             self.valid_inputs = True
         else:
-            self.valid_inputs =  False
-
+            self.valid_inputs = False
 
     def get_vals(self):
         self.vals = [self.hor.inch.get(), self.hor.frac.get(),
-        self.vert.inch.get(), self.vert.frac.get()]
-
+                     self.vert.inch.get(), self.vert.frac.get()]
 
     def check_numeric(self):
         self.numeric = True
-        for i in range(0,4):
+        for i in range(0, 4):
             if self.vals[i]:
                 if not self.vals[i].isnumeric():
                     self.logger.info(f"Invalid value: {self.vals[i]}")
@@ -247,7 +312,6 @@ class Application(tk.Tk):
             else:
                 self.vals[i] = int(0)
 
-    
     def check_size(self):
         self.horizontal_len, self.vertical_len = self.combine_vals()
         self.bad_cut_length = False
@@ -267,8 +331,8 @@ class Application(tk.Tk):
 
         if self.vertical_len > config.MAX_VERTICAL:
             message += (f"\nVertical cut is too large:\n"
-                       f"Max Vertical Cut: {config.MAX_VERTICAL} in)\n"
-                       f"Input Vertical Cut: {self.vertical_len} in)\n")
+                       f"Max Vertical Cut: {config.MAX_VERTICAL} in\n"
+                       f"Input Vertical Cut: {self.vertical_len} in\n")
             self.bad_cut_length = True
                 
         if self.vertical_len < config.MIN_VERTICAL:
@@ -279,27 +343,22 @@ class Application(tk.Tk):
 
         if self.bad_cut_length:
             messagebox.showwarning("Cut Size Warning", message)
-
         else:
             message = (f"Horizontal: {self.horizontal_len} in, Vertical: {self.vertical_len} in")
         
         self.logger.info(message)
-        print(message)
-            
+
     def make_hor_printout(self):
         hor_len = f"{self.vals[0]} {self.vals[1]}/8"
-
         return hor_len
     
     def make_ver_printout(self):
         ver_len = f"{self.vals[2]} {self.vals[3]}/8"
-
         return ver_len
     
     def combine_vals(self):
         hor_len = self.vals[0] + self.vals[1] * (1/8)
         ver_len = self.vals[2] + self.vals[3] * (1/8)
-
         return hor_len, ver_len
     
     def clear_entries(self):
@@ -318,19 +377,19 @@ class InputMeasure(ttk.Frame):
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
 
-        self.title = ttk.Label(self, text=title_text, font=('Arial 16'))
+        self.title = ttk.Label(self, text=title_text, font=('Arial', 16))
         self.title.grid(row=0, column=0, columnspan=2, sticky="ew")
 
-        self.inch = ttk.Entry(self, font=('Arial 12'))
+        self.inch = ttk.Entry(self, font=('Arial', 12))
         self.inch.grid(row=1, column=0, sticky="ew")
 
-        self.inch_label = ttk.Label(self, text="Inches", font=('Arial 12'))
+        self.inch_label = ttk.Label(self, text="Inches", font=('Arial', 12))
         self.inch_label.grid(row=2, column=0, sticky="n")
 
-        self.frac = ttk.Entry(self, font=('Arial 12'))
+        self.frac = ttk.Entry(self, font=('Arial', 12))
         self.frac.grid(row=1, column=1, sticky="ew")
 
-        self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial 12'))
+        self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial', 12))
         self.frac_label.grid(row=2, column=1, sticky="n")
 
 class KeyBoard(ttk.Frame):
@@ -376,22 +435,25 @@ class KeyBoard(ttk.Frame):
         self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9))
         self.nine.grid(row=2, column=2, sticky="nsew")
 
-        self.checkmark_image = self.download_image(config.NEXT_IMAGE)
-        self.next = ttk.Button(self, text="N", image=self.checkmark_image, command=self.switch_entry)
+        try:
+            self.checkmark_image = PhotoImage(file=config.NEXT_IMAGE)
+            self.next = ttk.Button(self, text="Next", image=self.checkmark_image, command=self.switch_entry)
+        except tk.TclError:
+            self.logger.error("Failed to load checkmark image")
+            self.next = ttk.Button(self, text="Next", command=self.switch_entry)
         self.next.grid(row=3, column=0, sticky="nsew")
 
         self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
         self.zero.grid(row=3, column=1, sticky="nsew")
 
-        self.delete_image = self.download_image(config.DELETE_IMAGE)
-        self.delete = ttk.Button(self, text="D", image=self.delete_image,  command=self.delete_text)
+        try:
+            self.delete_image = PhotoImage(file=config.DELETE_IMAGE)
+            self.delete = ttk.Button(self, text="Delete", image=self.delete_image, command=self.delete_text)
+        except tk.TclError:
+            self.logger.error("Failed to load delete image")
+            self.delete = ttk.Button(self, text="Delete", command=self.delete_text)
         self.delete.grid(row=3, column=2, sticky="nsew")
         
-    def download_image(self, image_url):
-        response = requests.get(image_url)
-        image_data = response.content
-        return PhotoImage(data=image_data)
-
     def insert_text(self, char):
         if self.active_entry:
             self.active_entry.insert(tk.END, str(char))
@@ -399,9 +461,8 @@ class KeyBoard(ttk.Frame):
 
     def delete_text(self):
         current_text = self.active_entry.get()
-
         if current_text:
-            self.active_entry.delete(len(current_text)-1,tk.END)
+            self.active_entry.delete(len(current_text)-1, tk.END)
         else:
             self.switch_entry_back()
 
@@ -418,7 +479,6 @@ class KeyBoard(ttk.Frame):
             self.active_entry = self.input_measures[1].frac
         else:
             self.active_entry = self.input_measures[0].inch  
-
         self.active_entry.focus_set()
 
     def switch_entry_back(self):
@@ -430,5 +490,4 @@ class KeyBoard(ttk.Frame):
             self.active_entry = self.input_measures[0].frac
         else:
             self.active_entry = self.input_measures[1].inch 
-
         self.active_entry.focus_set()
