@@ -173,6 +173,7 @@ def main():
 
     try:
         while True:
+            invalid = False
             motor = input("Enter motor (x/y/z/a): ").lower()
 
             # if emergency_stop:  # Stop execution if emergency stop is activated
@@ -182,10 +183,20 @@ def main():
                 direction = input("Enter direction of actuator (i/o): ").lower()
                 move_actuator(direction)
             elif motor in MOTOR_PINS:  # Motor movement
-                direction = input("Enter direction (l/r/u/d/i/o): ").lower()
-                distance = float(input("Enter distance (in inches): "))
-                RPM = int(input("Enter RPM: "))
-                rotate_motor(motor, direction, distance, RPM)
+                if motor == "x":
+                    direction = input("Enter direction (l/r): ").lower()
+                elif motor == "y":
+                    direction = input("Enter direction (u/d): ").lower()
+                elif motor == "z":
+                    direction = input("Enter direction (u/d): ").lower()
+                else:
+                    print("Invalid motor. Use 'x', 'y', or 'z'.")
+                    invalid = True
+                    continue
+                if not invalid:
+                    distance = float(input("Enter distance (in inches): "))
+                    RPM = int(input("Enter RPM: "))
+                    rotate_motor(motor, direction, distance, RPM)
             else:
                 print("Invalid motor. Use 'x', 'y', 'z', or 'a'.")
                 continue
