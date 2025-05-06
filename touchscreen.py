@@ -1,6 +1,6 @@
 import sys
 import config
-from . import motor
+import motor
 import threading
 import tkinter as tk
 from tkinter import ttk
