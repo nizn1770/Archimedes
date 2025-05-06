@@ -41,7 +41,7 @@ class Application(tk.Tk):
         self.loading_screen = self.create_loading_screen()
         self.loading_screen.deiconify()
 
-        self.after(2000, self.initialize_ui)
+        self.after(10000, self.initialize_ui)
 
     def create_loading_screen(self):
         self.logger.info("Creating loading screen")
