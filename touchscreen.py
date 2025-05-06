@@ -1,6 +1,6 @@
 import sys
 import config
-import cnc_motor as motor
+from . import motor
 import threading
 import tkinter as tk
 from tkinter import ttk
@@ -15,6 +15,7 @@ class Application(tk.Tk):
         self.logger = logger
         self.logger.info("Initializing Archimedes")
         self.logger.info(f"Imported motor module from: {motor.__file__}")
+        self.logger.info(f"Screen resolution: {self.winfo_screenwidth()}x{self.winfo_screenheight()}")
 
         self.title("Archimedes")
         self.bind("<Escape>", self.exit_fullscreen)
@@ -68,14 +69,22 @@ class Application(tk.Tk):
     def initialize_ui(self):
         self.loading_screen.destroy()
         self.logger.info("Archimedes initialized")
-        self.attributes("-fullscreen", True)
+        try:
+            self.attributes("-fullscreen", True)
+            self.logger.info("Set to fullscreen mode")
+        except tk.TclError:
+            self.logger.warning("Fullscreen mode failed, setting fixed geometry")
+            self.geometry("800x480")
         self.message_var = tk.StringVar()
         self.measure_init()
+        self.update()  # Force UI update
+        self.logger.info(f"Main window geometry: {self.winfo_geometry()}")
 
     def exit_fullscreen(self, event=None):
         self.logger.info("Exiting fullscreen mode")
         self.attributes("-fullscreen", False)
-    
+        self.geometry("800x480")
+
     def quit_program(self, event=None):
         self.logger.info("Quitting program")
         self.cancel_flag = True
@@ -93,28 +102,29 @@ class Application(tk.Tk):
 
     def measure_init(self):
         self.logger.info("Initializing measurement UI")
-        self.columnconfigure(0, weight=1, minsize=400)
-        self.columnconfigure(1, weight=1, minsize=400)
-        self.rowconfigure(0, weight=1, minsize=160)
-        self.rowconfigure(1, weight=1, minsize=160)
-        self.rowconfigure(2, weight=1, minsize=160)
+        self.columnconfigure(0, weight=1, minsize=500)
+        self.columnconfigure(1, weight=1, minsize=500)
+        self.rowconfigure(0, weight=1, minsize=200)
+        self.rowconfigure(1, weight=1, minsize=200)
+        self.rowconfigure(2, weight=1, minsize=200)
 
         self.hor = InputMeasure(self, "Horizontal")
         self.hor.grid(row=0, column=0, sticky="nsew")
         self.hor.inch.focus_set()
-        self.logger.debug("Horizontal InputMeasure created and gridded")
+        self.logger.debug(f"Horizontal InputMeasure created and gridded: {self.hor.winfo_geometry()}")
 
         self.vert = InputMeasure(self, "Vertical")
         self.vert.grid(row=1, column=0, sticky="nsew")
-        self.logger.debug("Vertical InputMeasure created and gridded")
+        self.logger.debug(f"Vertical InputMeasure created and gridded: {self.vert.winfo_geometry()}")
 
         submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
         submit.grid(row=2, column=0, sticky="nsew")
-        self.logger.debug("Submit button created and gridded")
+        self.logger.debug(f"Submit button created and gridded: {submit.winfo_geometry()}")
 
         self.keyboard = KeyBoard(self, [self.hor, self.vert], self.logger)
         self.keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
-        self.logger.info("Keyboard widget created and gridded")
+        self.logger.info(f"Keyboard widget created and gridded: {self.keyboard.winfo_geometry()}")
+        self.update()  # Force UI update after keyboard gridding
 
     def send_cuts(self):
         self.logger.info("Processing send_cuts")
@@ -484,7 +494,7 @@ class KeyBoard(ttk.Frame):
         self.five.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
 
         self.six = ttk.Button(self, text="6", command=lambda: self.insert_text(6), width=10)
-        self.six.grid(row=1, column=2, static="nsew", padx=5, pady=5)
+        self.six.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
 
         self.seven = ttk.Button(self, text="7", command=lambda: self.insert_text(7), width=10)
         self.seven.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
@@ -505,55 +515,3 @@ class KeyBoard(ttk.Frame):
         self.delete.grid(row=3, column=2, sticky="nsew", padx=5, pady=5)
         
         self.logger.info("Keyboard buttons initialized")
-
-    def insert_text(self, char):
-        if self.active_entry:
-            self.active_entry.insert(tk.END, str(char))
-            self.active_entry.focus_set()
-            self.logger.info(f"Inserted {char} into {self.active_entry}")
-
-    def delete_text(self):
-        if self.active_entry:
-            current_text = self.active_entry.get()
-            if current_text:
-                self.active_entry.delete(len(current_text)-1, tk.END)
-                self.logger.info(f"Deleted character from {self.active_entry}")
-            else:
-                self.switch_entry_back()
-                self.logger.info(f"Switched back entry due to empty field")
-
-    def reset_entry(self):
-        self.active_entry = self.input_measures[0].inch if self.input_measures else None
-        self.logger.info(f"Reset active entry to {self.active_entry}")
-        if self.active_entry:
-            self.active_entry.focus_set()
-
-    def switch_entry(self):
-        if not self.active_entry or not self.input_measures:
-            self.logger.warning("No active entry or input measures for switch_entry")
-            return
-        if self.active_entry == self.input_measures[0].inch:
-            self.active_entry = self.input_measures[0].frac
-        elif self.active_entry == self.input_measures[0].frac:
-            self.active_entry = self.input_measures[1].inch
-        elif self.active_entry == self.input_measures[1].inch:
-            self.active_entry = self.input_measures[1].frac
-        else:
-            self.active_entry = self.input_measures[0].inch  
-        self.active_entry.focus_set()
-        self.logger.info(f"Switched to active entry: {self.active_entry}")
-
-    def switch_entry_back(self):
-        if not self.active_entry or not self.input_measures:
-            self.logger.warning("No active entry or input measures for switch_entry_back")
-            return
-        if self.active_entry == self.input_measures[0].inch:
-            self.active_entry = self.input_measures[1].frac
-        elif self.active_entry == self.input_measures[0].frac:
-            self.active_entry = self.input_measures[0].inch 
-        elif self.active_entry == self.input_measures[1].inch:
-            self.active_entry = self.input_measures[0].frac
-        else:
-            self.active_entry = self.input_measures[1].inch 
-        self.active_entry.focus_set()
-        self.logger.info(f"Switched back to active entry: {self.active_entry}")
