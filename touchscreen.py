@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 from tkinter import messagebox
+import requests
 import os
 
 class Application(tk.Tk):
@@ -61,9 +62,8 @@ class Application(tk.Tk):
         loading_window.rowconfigure(1, weight=1)
 
         try:
-            logo_image = PhotoImage(file=config.LOGO_IMAGE)
-            logo_image_label = tk.Label(loading_window, image=logo_image)
-            logo_image_label.image = logo_image
+            logo_image = self.download_image(config.LOGO_IMAGE)
+            logo_image_label = tk.Label(loading_window, image=logo_image, anchor='center')  
             logo_image_label.grid(row=0, column=0, sticky="nsew")
             self.logger.debug("Loaded logo image")
         except tk.TclError:
@@ -76,6 +76,11 @@ class Application(tk.Tk):
         self.logger.debug("Loading screen label added")
 
         return loading_window
+
+    def download_image(self, image_url):
+        response = requests.get(image_url)
+        image_data = response.content
+        return PhotoImage(data=image_data)
 
     def initialize_ui(self):
         self.loading_screen.destroy()
@@ -578,17 +583,24 @@ class KeyBoard(ttk.Frame):
         self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9), width=8)
         self.nine.grid(row=2, column=2, sticky="nsew", padx=5, pady=5)
 
-        self.next = ttk.Button(self, text="Next", command=self.switch_entry, width=8)
-        self.next.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
+        self.checkmark_image = self.download_image(config.NEXT_IMAGE)
+        self.next = ttk.Button(self, text="N", image=self.checkmark_image, command=self.switch_entry)
+        self.next.grid(row=3, column=0, sticky="nsew")
 
-        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0), width=8)
-        self.zero.grid(row=3, column=1, sticky="nsew", padx=5, pady=5)
+        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
+        self.zero.grid(row=3, column=1, sticky="nsew")
 
-        self.delete = ttk.Button(self, text="Del", command=self.delete_text, width=8)
-        self.delete.grid(row=3, column=2, sticky="nsew", padx=5, pady=5)
-        
+        self.delete_image = self.download_image(config.DELETE_IMAGE)
+        self.delete = ttk.Button(self, text="D", image=self.delete_image,  command=self.delete_text)
+        self.delete.grid(row=3, column=2, sticky="nsew")
+
         self.logger.info("Keyboard buttons initialized")
         self.logger.debug(f"Keyboard geometry: {self.winfo_geometry()}")
+
+    def download_image(self, image_url):
+        response = requests.get(image_url)
+        image_data = response.content
+        return PhotoImage(data=image_data)
 
     def insert_text(self, char):
         if self.active_entry:
