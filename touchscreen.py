@@ -7,7 +7,6 @@ from tkinter import ttk
 from tkinter import PhotoImage
 from tkinter import messagebox
 import os
-import requests
 
 class Application(tk.Tk):
     def __init__(self, logger):
@@ -78,7 +77,7 @@ class Application(tk.Tk):
             self.geometry("800x480")
         self.message_var = tk.StringVar()
         self.measure_init()
-        self.update()  # Force UI update
+        self.update()
         self.logger.info(f"Main window geometry: {self.winfo_geometry()}")
 
     def exit_fullscreen(self, event=None):
@@ -103,11 +102,11 @@ class Application(tk.Tk):
 
     def measure_init(self):
         self.logger.info("Initializing measurement UI")
-        self.columnconfigure(0, weight=1, minsize=500)
-        self.columnconfigure(1, weight=1, minsize=500)
-        self.rowconfigure(0, weight=1, minsize=200)
-        self.rowconfigure(1, weight=1, minsize=200)
-        self.rowconfigure(2, weight=1, minsize=200)
+        self.columnconfigure(0, weight=1, minsize=300)
+        self.columnconfigure(1, weight=1, minsize=300)
+        self.rowconfigure(0, weight=1, minsize=100)
+        self.rowconfigure(1, weight=1, minsize=100)
+        self.rowconfigure(2, weight=2, minsize=150)  # More space for submit button
 
         self.hor = InputMeasure(self, "Horizontal")
         self.hor.grid(row=0, column=0, sticky="nsew")
@@ -119,13 +118,13 @@ class Application(tk.Tk):
         self.logger.debug(f"Vertical InputMeasure created and gridded: {self.vert.winfo_geometry()}")
 
         submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
-        submit.grid(row=2, column=0, sticky="nsew")
+        submit.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
         self.logger.debug(f"Submit button created and gridded: {submit.winfo_geometry()}")
 
         self.keyboard = KeyBoard(self, [self.hor, self.vert], self.logger)
         self.keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
         self.logger.info(f"Keyboard widget created and gridded: {self.keyboard.winfo_geometry()}")
-        self.update()  # Force UI update after keyboard gridding
+        self.update()
 
     def send_cuts(self):
         self.logger.info("Processing send_cuts")
@@ -154,9 +153,6 @@ class Application(tk.Tk):
 
         self.clear_entries()
         self.keyboard.reset_entry()
-
-        messagebox.showinfo("Returning to Home", "Returning Cut Head to Home. Wait to retrieve and load")
-        self.logger.info("Prompted user to return to home")
 
     def confirm_cuts(self):
         self.logger.info("Showing cut confirmation window")
@@ -195,10 +191,12 @@ class Application(tk.Tk):
     def show_cutting(self):
         self.cancel_flag = False
         self.logger.info("Showing cutting screen")
+        self.withdraw()  # Hide main window
         self.cutting_window = tk.Toplevel(self)
         self.cutting_window.attributes("-topmost", True)
         self.cutting_window.attributes("-fullscreen", True)
         self.cutting_window.title("Cutting")
+        self.logger.debug(f"Cutting window created: {self.cutting_window.winfo_geometry()}")
 
         self.cutting_window.columnconfigure(0, weight=1)
         self.cutting_window.columnconfigure(1, weight=1)
@@ -227,7 +225,9 @@ class Application(tk.Tk):
                 self.logger.info("Canceling after horizontal cut")
                 motor.return_to_home_from_hor_cut(y_len)
                 self.after(0, lambda: self.cutting_window.destroy())
+                self.after(0, lambda: self.deiconify())
                 self.after(0, lambda: messagebox.showinfo("Cut Canceled", "The cut was canceled. Machine returned to home."))
+                self.after(0, lambda: messagebox.showinfo("Returning to Home", "Returning Cut Head to Home. Wait to retrieve and load"))
                 return
 
             self.cutting_window.destroy()
@@ -255,7 +255,9 @@ class Application(tk.Tk):
             if not self.continue_response or self.cancel_flag:
                 self.logger.info("Canceling after scrap removal")
                 motor.return_to_home_from_hor_cut(y_len)
+                self.after(0, lambda: self.deiconify())
                 self.after(0, lambda: messagebox.showinfo("Cut Canceled", "The cut was canceled. Machine returned to home."))
+                self.after(0, lambda: messagebox.showinfo("Returning to Home", "Returning Cut Head to Home. Wait to retrieve and load"))
                 return
 
             # Show cutting screen for vertical cut
@@ -263,6 +265,7 @@ class Application(tk.Tk):
             self.cutting_window.attributes("-topmost", True)
             self.cutting_window.attributes("-fullscreen", True)
             self.cutting_window.title("Cutting")
+            self.logger.debug(f"Cutting window created for vertical cut: {self.cutting_window.winfo_geometry()}")
 
             self.cutting_window.columnconfigure(0, weight=1)
             self.cutting_window.columnconfigure(1, weight=1)
@@ -284,7 +287,9 @@ class Application(tk.Tk):
                 self.logger.info("Canceling after vertical cut")
                 motor.return_to_home(x_len, y_len)
                 self.after(0, lambda: self.cutting_window.destroy())
+                self.after(0, lambda: self.deiconify())
                 self.after(0, lambda: messagebox.showinfo("Cut Canceled", "The cut was canceled. Machine returned to home."))
+                self.after(0, lambda: messagebox.showinfo("Returning to Home", "Returning Cut Head to Home. Wait to retrieve and load"))
                 return
 
             # Return to home
@@ -292,14 +297,18 @@ class Application(tk.Tk):
             motor.return_to_home(x_len, y_len)
 
             self.after(0, lambda: self.cutting_window.destroy())
+            self.after(0, lambda: self.deiconify())
             self.after(0, lambda: messagebox.showinfo("Cut Completed", "The cut has been completed successfully"))
+            self.after(0, lambda: messagebox.showinfo("Returning to Home", "Returning Cut Head to Home. Wait to retrieve and load"))
             self.logger.info("Cut completed successfully")
 
         except Exception as e:
             error_msg = f"Cut error: {str(e)}"
             self.logger.error(error_msg)
             self.after(0, lambda msg=error_msg: self.cutting_window.destroy())
+            self.after(0, lambda msg=error_msg: self.deiconify())
             self.after(0, lambda msg=error_msg: messagebox.showerror("Cut Error", f"An error occurred during cutting: {msg}"))
+            self.after(0, lambda: messagebox.showinfo("Returning to Home", "Returning Cut Head to Home. Wait to retrieve and load"))
             motor.cleanup_motors()
 
     def confirm_continue(self):
@@ -471,75 +480,79 @@ class KeyBoard(ttk.Frame):
         self.active_entry = input_measures[0].inch if input_measures else None
         self.logger.debug(f"Initial active entry: {self.active_entry}")
 
-        self.columnconfigure(0, weight=1, minsize=100)
-        self.columnconfigure(1, weight=1, minsize=100)
-        self.columnconfigure(2, weight=1, minsize=100)
-        self.rowconfigure(0, weight=1, minsize=40)
-        self.rowconfigure(1, weight=1, minsize=40)
-        self.rowconfigure(2, weight=1, minsize=40)
-        self.rowconfigure(3, weight=1, minsize=40)
+        self.columnconfigure(0, weight=1, minsize=80)
+        self.columnconfigure(1, weight=1, minsize=80)
+        self.columnconfigure(2, weight=1, minsize=80)
+        self.rowconfigure(0, weight=1, minsize=60)
+        self.rowconfigure(1, weight=1, minsize=60)
+        self.rowconfigure(2, weight=1, minsize=60)
+        self.rowconfigure(3, weight=1, minsize=60)
 
-        self.one = ttk.Button(self, text="1", command=lambda: self.insert_text(1), width=10)
+        self.one = ttk.Button(self, text="1", command=lambda: self.insert_text(1), width=8)
         self.one.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
-        self.two = ttk.Button(self, text="2", command=lambda: self.insert_text(2), width=10)
+        self.two = ttk.Button(self, text="2", command=lambda: self.insert_text(2), width=8)
         self.two.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
-        self.three = ttk.Button(self, text="3", command=lambda: self.insert_text(3), width=10)
+        self.three = ttk.Button(self, text="3", command=lambda: self.insert_text(3), width=8)
         self.three.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
 
-        self.four = ttk.Button(self, text="4", command=lambda: self.insert_text(4), width=10)
+        self.four = ttk.Button(self, text="4", command=lambda: self.insert_text(4), width=8)
         self.four.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
 
-        self.five = ttk.Button(self, text="5", command=lambda: self.insert_text(5), width=10)
+        self.five = ttk.Button(self, text="5", command=lambda: self.insert_text(5), width=8)
         self.five.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
 
-        self.six = ttk.Button(self, text="6", command=lambda: self.insert_text(6), width=10)
+        self.six = ttk.Button(self, text="6", command=lambda: self.insert_text(6), width=8)
         self.six.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
 
-        self.seven = ttk.Button(self, text="7", command=lambda: self.insert_text(7), width=10)
+        self.seven = ttk.Button(self, text="7", command=lambda: self.insert_text(7), width=8)
         self.seven.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
 
-        self.eight = ttk.Button(self, text="8", command=lambda: self.insert_text(8), width=10)
+        self.eight = ttk.Button(self, text="8", command=lambda: self.insert_text(8), width=8)
         self.eight.grid(row=2, column=1, sticky="nsew", padx=5, pady=5)
 
-        self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9), width=10)
+        self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9), width=8)
         self.nine.grid(row=2, column=2, sticky="nsew", padx=5, pady=5)
 
-        self.checkmark_image = self.download_image(config.NEXT_IMAGE)
-        self.next = ttk.Button(self, text="N", image=self.checkmark_image, command=self.switch_entry)
-        self.next.grid(row=3, column=0, sticky="nsew")
+        self.next = ttk.Button(self, text="Next", command=self.switch_entry, width=8)
+        self.next.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
 
-        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
-        self.zero.grid(row=3, column=1, sticky="nsew")
+        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0), width=8)
+        self.zero.grid(row=3, column=1, sticky="nsew", padx=5, pady=5)
 
-        self.delete_image = self.download_image(config.DELETE_IMAGE)
-        self.delete = ttk.Button(self, text="D", image=self.delete_image,  command=self.delete_text)
-        self.delete.grid(row=3, column=2, sticky="nsew")
+        self.delete = ttk.Button(self, text="Del", command=self.delete_text, width=8)
+        self.delete.grid(row=3, column=2, sticky="nsew", padx=5, pady=5)
         
-    def download_image(self, image_url):
-        response = requests.get(image_url)
-        image_data = response.content
-        return PhotoImage(data=image_data)
+        self.logger.info("Keyboard buttons initialized")
+        self.logger.debug(f"Keyboard geometry: {self.winfo_geometry()}")
 
     def insert_text(self, char):
         if self.active_entry:
             self.active_entry.insert(tk.END, str(char))
             self.active_entry.focus_set()
+            self.logger.info(f"Inserted {char} into {self.active_entry}")
 
     def delete_text(self):
-        current_text = self.active_entry.get()
-
-        if current_text:
-            self.active_entry.delete(len(current_text)-1,tk.END)
-        else:
-            self.switch_entry_back()
+        if self.active_entry:
+            current_text = self.active_entry.get()
+            if current_text:
+                self.active_entry.delete(len(current_text)-1, tk.END)
+                self.logger.info(f"Deleted character from {self.active_entry}")
+            else:
+                self.switch_entry_back()
+                self.logger.info(f"Switched back entry due to empty field")
 
     def reset_entry(self):
-        self.active_entry = self.input_measures[0].inch
-        self.active_entry.focus_set()
+        self.active_entry = self.input_measures[0].inch if self.input_measures else None
+        self.logger.info(f"Reset active entry to {self.active_entry}")
+        if self.active_entry:
+            self.active_entry.focus_set()
 
     def switch_entry(self):
+        if not self.active_entry or not self.input_measures:
+            self.logger.warning("No active entry or input measures for switch_entry")
+            return
         if self.active_entry == self.input_measures[0].inch:
             self.active_entry = self.input_measures[0].frac
         elif self.active_entry == self.input_measures[0].frac:
@@ -548,10 +561,13 @@ class KeyBoard(ttk.Frame):
             self.active_entry = self.input_measures[1].frac
         else:
             self.active_entry = self.input_measures[0].inch  
-
         self.active_entry.focus_set()
+        self.logger.info(f"Switched to active entry: {self.active_entry}")
 
     def switch_entry_back(self):
+        if not self.active_entry or not self.input_measures:
+            self.logger.warning("No active entry or input measures for switch_entry_back")
+            return
         if self.active_entry == self.input_measures[0].inch:
             self.active_entry = self.input_measures[1].frac
         elif self.active_entry == self.input_measures[0].frac:
@@ -560,5 +576,5 @@ class KeyBoard(ttk.Frame):
             self.active_entry = self.input_measures[0].frac
         else:
             self.active_entry = self.input_measures[1].inch 
-
         self.active_entry.focus_set()
+        self.logger.info(f"Switched back to active entry: {self.active_entry}")
