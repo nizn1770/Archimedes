@@ -21,6 +21,10 @@ class Application(tk.Tk):
         self.bind("<Escape>", self.exit_fullscreen)
         self.bind("Q", self.quit_program)
 
+        # Hide main window during initialization
+        self.withdraw()
+        self.logger.debug("Main window hidden during initialization")
+
         # Initialize motors
         try:
             motor.init_motors()
@@ -42,8 +46,15 @@ class Application(tk.Tk):
         self.logger.info("Creating loading screen")
         loading_window = tk.Toplevel(self)
         loading_window.attributes("-topmost", True)
-        loading_window.geometry("800x480")
+        try:
+            loading_window.attributes("-fullscreen", True)
+            self.logger.debug("Loading window set to fullscreen")
+        except tk.TclError:
+            self.logger.warning("Fullscreen failed for loading window, setting fixed geometry")
+            loading_window.geometry("800x480")
         loading_window.title("Initializing Archimedes")
+        loading_window.focus_force()
+        self.logger.debug(f"Loading window created: {loading_window.winfo_geometry()}")
 
         loading_window.columnconfigure(0, weight=1)
         loading_window.rowconfigure(0, weight=1)
@@ -68,7 +79,9 @@ class Application(tk.Tk):
 
     def initialize_ui(self):
         self.loading_screen.destroy()
-        self.logger.info("Archimedes initialized")
+        self.logger.info("Loading screen destroyed")
+        self.deiconify()
+        self.logger.debug("Main window shown")
         try:
             self.attributes("-fullscreen", True)
             self.logger.info("Set to fullscreen mode")
@@ -106,7 +119,7 @@ class Application(tk.Tk):
         self.columnconfigure(1, weight=1, minsize=300)
         self.rowconfigure(0, weight=1, minsize=100)
         self.rowconfigure(1, weight=1, minsize=100)
-        self.rowconfigure(2, weight=2, minsize=150)  # More space for submit button
+        self.rowconfigure(2, weight=2, minsize=150)
 
         self.hor = InputMeasure(self, "Horizontal")
         self.hor.grid(row=0, column=0, sticky="nsew")
@@ -156,10 +169,18 @@ class Application(tk.Tk):
 
     def confirm_cuts(self):
         self.logger.info("Showing cut confirmation window")
+        self.withdraw()
         self.confirmation_window = tk.Toplevel(self)
         self.confirmation_window.attributes("-topmost", True)
-        self.confirmation_window.attributes("-fullscreen", True)
+        try:
+            self.confirmation_window.attributes("-fullscreen", True)
+            self.logger.debug("Confirmation window set to fullscreen")
+        except tk.TclError:
+            self.logger.warning("Fullscreen failed for confirmation window, setting fixed geometry")
+            self.confirmation_window.geometry("800x480")
         self.confirmation_window.title("Confirm")
+        self.confirmation_window.focus_force()
+        self.logger.debug(f"Confirmation window created: {self.confirmation_window.winfo_geometry()}")
 
         self.confirmation_window.columnconfigure(0, weight=1)
         self.confirmation_window.columnconfigure(1, weight=1)
@@ -187,15 +208,23 @@ class Application(tk.Tk):
         self.logger.info(f"Cut confirmation response: {response}")
         self.confirmation_response = response
         self.confirmation_window.destroy()
+        if not response:
+            self.deiconify()
 
     def show_cutting(self):
         self.cancel_flag = False
         self.logger.info("Showing cutting screen")
-        self.withdraw()  # Hide main window
+        self.withdraw()
         self.cutting_window = tk.Toplevel(self)
         self.cutting_window.attributes("-topmost", True)
-        self.cutting_window.attributes("-fullscreen", True)
+        try:
+            self.cutting_window.attributes("-fullscreen", True)
+            self.logger.debug("Cutting window set to fullscreen")
+        except tk.TclError:
+            self.logger.warning("Fullscreen failed for cutting window, setting fixed geometry")
+            self.cutting_window.geometry("800x480")
         self.cutting_window.title("Cutting")
+        self.cutting_window.focus_force()
         self.logger.debug(f"Cutting window created: {self.cutting_window.winfo_geometry()}")
 
         self.cutting_window.columnconfigure(0, weight=1)
@@ -263,8 +292,14 @@ class Application(tk.Tk):
             # Show cutting screen for vertical cut
             self.cutting_window = tk.Toplevel(self)
             self.cutting_window.attributes("-topmost", True)
-            self.cutting_window.attributes("-fullscreen", True)
+            try:
+                self.cutting_window.attributes("-fullscreen", True)
+                self.logger.debug("Cutting window set to fullscreen for vertical cut")
+            except tk.TclError:
+                self.logger.warning("Fullscreen failed for cutting window, setting fixed geometry")
+                self.cutting_window.geometry("800x480")
             self.cutting_window.title("Cutting")
+            self.cutting_window.focus_force()
             self.logger.debug(f"Cutting window created for vertical cut: {self.cutting_window.winfo_geometry()}")
 
             self.cutting_window.columnconfigure(0, weight=1)
@@ -315,8 +350,15 @@ class Application(tk.Tk):
         self.logger.info("Showing continue confirmation window")
         self.continue_window = tk.Toplevel(self)
         self.continue_window.attributes("-topmost", True)
-        self.continue_window.attributes("-fullscreen", True)
+        try:
+            self.continue_window.attributes("-fullscreen", True)
+            self.logger.debug("Continue window set to fullscreen")
+        except tk.TclError:
+            self.logger.warning("Fullscreen failed for continue window, setting fixed geometry")
+            self.continue_window.geometry("800x480")
         self.continue_window.title("Continue Cut")
+        self.continue_window.focus_force()
+        self.logger.debug(f"Continue window created: {self.continue_window.winfo_geometry()}")
 
         self.continue_window.columnconfigure(0, weight=1)
         self.continue_window.columnconfigure(1, weight=1)
@@ -444,137 +486,3 @@ class Application(tk.Tk):
         for input_measure in [self.hor, self.vert]:
             input_measure.inch.delete(0, tk.END)
             input_measure.frac.delete(0, tk.END)
-
-class InputMeasure(ttk.Frame):
-    def __init__(self, parent, title_text):
-        super().__init__(parent)
-
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-        self.rowconfigure(2, weight=1)
-
-        self.title = ttk.Label(self, text=title_text, font=('Arial', 16))
-        self.title.grid(row=0, column=0, columnspan=2, sticky="ew")
-
-        self.inch = ttk.Entry(self, font=('Arial', 12))
-        self.inch.grid(row=1, column=0, sticky="ew")
-
-        self.inch_label = ttk.Label(self, text="Inches", font=('Arial', 12))
-        self.inch_label.grid(row=2, column=0, sticky="n")
-
-        self.frac = ttk.Entry(self, font=('Arial', 12))
-        self.frac.grid(row=1, column=1, sticky="ew")
-
-        self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial', 12))
-        self.frac_label.grid(row=2, column=1, sticky="n")
-
-class KeyBoard(ttk.Frame):
-    def __init__(self, parent, input_measures, logger):
-        super().__init__(parent)
-        self.logger = logger
-        self.logger.info("Initializing KeyBoard")
-        
-        self.input_measures = input_measures
-        self.active_entry = input_measures[0].inch if input_measures else None
-        self.logger.debug(f"Initial active entry: {self.active_entry}")
-
-        self.columnconfigure(0, weight=1, minsize=80)
-        self.columnconfigure(1, weight=1, minsize=80)
-        self.columnconfigure(2, weight=1, minsize=80)
-        self.rowconfigure(0, weight=1, minsize=60)
-        self.rowconfigure(1, weight=1, minsize=60)
-        self.rowconfigure(2, weight=1, minsize=60)
-        self.rowconfigure(3, weight=1, minsize=60)
-
-        self.one = ttk.Button(self, text="1", command=lambda: self.insert_text(1), width=8)
-        self.one.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-
-        self.two = ttk.Button(self, text="2", command=lambda: self.insert_text(2), width=8)
-        self.two.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
-
-        self.three = ttk.Button(self, text="3", command=lambda: self.insert_text(3), width=8)
-        self.three.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
-
-        self.four = ttk.Button(self, text="4", command=lambda: self.insert_text(4), width=8)
-        self.four.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-
-        self.five = ttk.Button(self, text="5", command=lambda: self.insert_text(5), width=8)
-        self.five.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
-
-        self.six = ttk.Button(self, text="6", command=lambda: self.insert_text(6), width=8)
-        self.six.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
-
-        self.seven = ttk.Button(self, text="7", command=lambda: self.insert_text(7), width=8)
-        self.seven.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
-
-        self.eight = ttk.Button(self, text="8", command=lambda: self.insert_text(8), width=8)
-        self.eight.grid(row=2, column=1, sticky="nsew", padx=5, pady=5)
-
-        self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9), width=8)
-        self.nine.grid(row=2, column=2, sticky="nsew", padx=5, pady=5)
-
-        self.next = ttk.Button(self, text="Next", command=self.switch_entry, width=8)
-        self.next.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
-
-        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0), width=8)
-        self.zero.grid(row=3, column=1, sticky="nsew", padx=5, pady=5)
-
-        self.delete = ttk.Button(self, text="Del", command=self.delete_text, width=8)
-        self.delete.grid(row=3, column=2, sticky="nsew", padx=5, pady=5)
-        
-        self.logger.info("Keyboard buttons initialized")
-        self.logger.debug(f"Keyboard geometry: {self.winfo_geometry()}")
-
-    def insert_text(self, char):
-        if self.active_entry:
-            self.active_entry.insert(tk.END, str(char))
-            self.active_entry.focus_set()
-            self.logger.info(f"Inserted {char} into {self.active_entry}")
-
-    def delete_text(self):
-        if self.active_entry:
-            current_text = self.active_entry.get()
-            if current_text:
-                self.active_entry.delete(len(current_text)-1, tk.END)
-                self.logger.info(f"Deleted character from {self.active_entry}")
-            else:
-                self.switch_entry_back()
-                self.logger.info(f"Switched back entry due to empty field")
-
-    def reset_entry(self):
-        self.active_entry = self.input_measures[0].inch if self.input_measures else None
-        self.logger.info(f"Reset active entry to {self.active_entry}")
-        if self.active_entry:
-            self.active_entry.focus_set()
-
-    def switch_entry(self):
-        if not self.active_entry or not self.input_measures:
-            self.logger.warning("No active entry or input measures for switch_entry")
-            return
-        if self.active_entry == self.input_measures[0].inch:
-            self.active_entry = self.input_measures[0].frac
-        elif self.active_entry == self.input_measures[0].frac:
-            self.active_entry = self.input_measures[1].inch
-        elif self.active_entry == self.input_measures[1].inch:
-            self.active_entry = self.input_measures[1].frac
-        else:
-            self.active_entry = self.input_measures[0].inch  
-        self.active_entry.focus_set()
-        self.logger.info(f"Switched to active entry: {self.active_entry}")
-
-    def switch_entry_back(self):
-        if not self.active_entry or not self.input_measures:
-            self.logger.warning("No active entry or input measures for switch_entry_back")
-            return
-        if self.active_entry == self.input_measures[0].inch:
-            self.active_entry = self.input_measures[1].frac
-        elif self.active_entry == self.input_measures[0].frac:
-            self.active_entry = self.input_measures[0].inch 
-        elif self.active_entry == self.input_measures[1].inch:
-            self.active_entry = self.input_measures[0].frac
-        else:
-            self.active_entry = self.input_measures[1].inch 
-        self.active_entry.focus_set()
-        self.logger.info(f"Switched back to active entry: {self.active_entry}")

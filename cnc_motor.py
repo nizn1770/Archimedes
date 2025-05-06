@@ -12,7 +12,7 @@ def init_motors():
     - Configures GPIO mode and suppresses warnings.
     - Stores motor parameters (direction pin, PWM pin, steps per revolution, pitch) in a dictionary.
     - Sets the motor and actuator pins as output.
-    - Starts the actuator's PWM signal at 25% duty cycle.
+    - Sets actuator value pin to HIGH.
     """
     logger.info("Initializing motors")
     GPIO.setmode(GPIO.BOARD)
@@ -34,10 +34,11 @@ def init_motors():
     GPIO.setup(config.A_PWM_PIN, GPIO.OUT)
     GPIO.setup(config.A_FOR_PIN, GPIO.OUT)
     GPIO.setup(config.A_REV_PIN, GPIO.OUT)
-    logger.debug(f"Actuator pins set up: A_PWM_PIN={config.A_PWM_PIN}, A_FOR_PIN={config.A_FOR_PIN}, A_REV_PIN={config.A_REV_PIN}")
+    GPIO.setup(config.A_VAL_PIN, GPIO.OUT)
+    logger.debug(f"Actuator pins set up: A_PWM_PIN={config.A_PWM_PIN}, A_FOR_PIN={config.A_FOR_PIN}, A_REV_PIN={config.A_REV_PIN}, A_VAL_PIN={config.A_VAL_PIN}")
 
-    GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
-    logger.info("Actuator PWM signal set to HIGH")
+    GPIO.output(config.A_VAL_PIN, GPIO.HIGH)
+    logger.info("Actuator value pin set to HIGH")
 
 def cleanup_motors():
     """
@@ -98,21 +99,34 @@ def move_actuator(direction):
     Moves the actuator in the specified direction ('o' for out, 'i' for in).
     """
     logger.info(f"Moving actuator: direction={direction}")
-    if direction == "o":
-        logger.debug("Setting actuator to move out")
-        GPIO.output(config.A_FOR_PIN, GPIO.HIGH)
-        GPIO.output(config.A_REV_PIN, GPIO.LOW)
-    elif direction == "i":
-        logger.debug("Setting actuator to move in")
-        GPIO.output(config.A_FOR_PIN, GPIO.LOW)
-        GPIO.output(config.A_REV_PIN, GPIO.HIGH)
-    else:
-        logger.error(f"Invalid actuator direction: {direction}. Use 'i' for in or 'o' for out.")
+    if direction not in ["o", "i"]:
+        logger.error("Invalid actuator direction: %s. Use 'i' for in or 'o' for out.", direction)
         return
-    
-    for _ in range(13):
-        time.sleep(1)
-        logger.debug("Actuator moving...")
+
+    try:
+        GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
+        logger.debug("Actuator PWM set to HIGH")
+        if direction == "o":
+            logger.debug("Setting actuator to move out: A_FOR_PIN=LOW, A_REV_PIN=HIGH")
+            GPIO.output(config.A_FOR_PIN, GPIO.LOW)
+            GPIO.output(config.A_REV_PIN, GPIO.HIGH)
+        else:  # direction == "i"
+            logger.debug("Setting actuator to move in: A_FOR_PIN=HIGH, A_REV_PIN=LOW")
+            GPIO.output(config.A_FOR_PIN, GPIO.HIGH)
+            GPIO.output(config.A_REV_PIN, GPIO.LOW)
+
+        for _ in range(13):
+            time.sleep(1)
+            logger.debug("Actuator moving...")
+
+        GPIO.output(config.A_FOR_PIN, GPIO.LOW)
+        GPIO.output(config.A_REV_PIN, GPIO.LOW)
+        logger.debug("Actuator stopped: A_FOR_PIN=LOW, A_REV_PIN=LOW")
+        GPIO.output(config.A_PWM_PIN, GPIO.LOW)
+        logger.debug("Actuator PWM set to LOW")
+
+    except Exception as e:
+        logger.error("Error in move_actuator: %s", str(e))
 
 def move_head(direction):
     """
@@ -168,6 +182,21 @@ def make_ver_cut(x_len, y_len):
     rotate_motor("y", "d", y_len, config.Y_RPM)
     logger.info("Vertical cut completed")
 
+def test_actuator(direction="o"):
+    """
+    Test function to manually trigger actuator movement.
+    - direction: 'o' for out, 'i' for in
+    """
+    logger.info("Starting actuator test: direction=%s", direction)
+    init_motors()
+    try:
+        move_actuator(direction)
+        logger.info("Actuator test completed")
+    except Exception as e:
+        logger.error("Actuator test failed: %s", str(e))
+    finally:
+        cleanup_motors()
+
 def main():
     """
     Main function to run the cutting sequence for testing.
@@ -178,7 +207,7 @@ def main():
         while True:
             x_len = int(input("Enter the length of the X cut in inches: "))
             y_len = int(input("Enter the length of the Y cut in inches: "))
-            logger.info(f"Test cut initiated: x_len={x_len}, y_len={y_len}")
+            logger.info("Test cut initiated: x_len=%s, y_len=%s", x_len, y_len)
             make_hor_cut(y_len)
             input("Remove scrap piece of panel and press Enter to continue...")
             make_ver_cut(x_len, y_len)
