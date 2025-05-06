@@ -1,11 +1,12 @@
 import sys
 import config
-import motor
+from . import motor
 import threading
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 from tkinter import messagebox
+import os
 
 class Application(tk.Tk):
     def __init__(self, logger):
@@ -13,6 +14,7 @@ class Application(tk.Tk):
 
         self.logger = logger
         self.logger.info("Initializing Archimedes")
+        self.logger.info(f"Imported motor module from: {motor.__file__}")
 
         self.title("Archimedes")
         self.bind("<Escape>", self.exit_fullscreen)
@@ -28,12 +30,15 @@ class Application(tk.Tk):
             sys.exit(1)
 
         self.cancel_flag = False
+        self.horizontal_len = 0
+        self.vertical_len = 0
         self.loading_screen = self.create_loading_screen()
         self.loading_screen.deiconify()
 
-        self.after(10000, self.initialize_ui)
+        self.after(2000, self.initialize_ui)
 
     def create_loading_screen(self):
+        self.logger.info("Creating loading screen")
         loading_window = tk.Toplevel(self)
         loading_window.attributes("-topmost", True)
         loading_window.geometry("800x480")
@@ -44,8 +49,11 @@ class Application(tk.Tk):
         loading_window.rowconfigure(1, weight=1)
 
         try:
-            logo_image_label = PhotoImage(file=config.LOGO_IMAGE)
+            logo_image = PhotoImage(file=config.LOGO_IMAGE)
+            logo_image_label = tk.Label(loading_window, image=logo_image)
+            logo_image_label.image = logo_image
             logo_image_label.grid(row=0, column=0, sticky="nsew")
+            self.logger.debug("Loaded logo image")
         except tk.TclError:
             self.logger.error("Failed to load logo image")
             logo_image_label = tk.Label(loading_window, text="Archimedes", font="Arial 24")
@@ -53,6 +61,7 @@ class Application(tk.Tk):
 
         loading_label = tk.Label(loading_window, text="Loading Archimedes...", font="Arial 24", anchor='center')
         loading_label.grid(row=1, column=0, sticky="nsew")
+        self.logger.debug("Loading screen label added")
 
         return loading_window
 
@@ -64,6 +73,7 @@ class Application(tk.Tk):
         self.measure_init()
 
     def exit_fullscreen(self, event=None):
+        self.logger.info("Exiting fullscreen mode")
         self.attributes("-fullscreen", False)
     
     def quit_program(self, event=None):
@@ -78,32 +88,38 @@ class Application(tk.Tk):
         self.logger.info("Cut canceled by user")
 
     def update_message(self, message):
+        self.logger.debug(f"Updating message: {message}")
         self.message_var.set(message)
 
     def measure_init(self):
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-        self.rowconfigure(2, weight=1)
+        self.logger.info("Initializing measurement UI")
+        self.columnconfigure(0, weight=1, minsize=400)
+        self.columnconfigure(1, weight=1, minsize=400)
+        self.rowconfigure(0, weight=1, minsize=160)
+        self.rowconfigure(1, weight=1, minsize=160)
+        self.rowconfigure(2, weight=1, minsize=160)
 
         self.hor = InputMeasure(self, "Horizontal")
         self.hor.grid(row=0, column=0, sticky="nsew")
         self.hor.inch.focus_set()
+        self.logger.debug("Horizontal InputMeasure created and gridded")
 
         self.vert = InputMeasure(self, "Vertical")
         self.vert.grid(row=1, column=0, sticky="nsew")
+        self.logger.debug("Vertical InputMeasure created and gridded")
 
         submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
         submit.grid(row=2, column=0, sticky="nsew")
+        self.logger.debug("Submit button created and gridded")
 
         self.keyboard = KeyBoard(self, [self.hor, self.vert], self.logger)
         self.keyboard.grid(row=0, column=1, rowspan=3, sticky="nsew")
+        self.logger.info("Keyboard widget created and gridded")
 
     def send_cuts(self):
+        self.logger.info("Processing send_cuts")
         self.validate_inputs()
-        if self.valid_inputs:
+        if self.valid_inputs and self.horizontal_len >= config.MIN_HORIZONTAL and self.vertical_len >= config.MIN_VERTICAL:
             message = (f"Horizontal: {self.make_hor_printout()} in\n"
                        f"Vertical: {self.make_ver_printout()} in")
             self.update_message(message)
@@ -114,17 +130,25 @@ class Application(tk.Tk):
             self.wait_window(self.confirmation_window)
 
             if self.confirmation_response:
+                self.logger.info(f"Starting cut with horizontal_len={self.horizontal_len}, vertical_len={self.vertical_len}")
                 self.show_cutting()
             else:
                 title = "Cut Canceled"
                 message = "The cut has been canceled."
+                self.logger.info("Cut canceled during confirmation")
                 messagebox.showinfo(title, message)
+        else:
+            self.logger.error(f"Validation failed: valid_inputs={self.valid_inputs}, horizontal_len={self.horizontal_len}, vertical_len={self.vertical_len}")
+            messagebox.showerror("Validation Error", "Invalid input values. Please enter valid numeric values within the allowed range.")
 
         self.clear_entries()
         self.keyboard.reset_entry()
 
+        messagebox.showinfo("Returning to Home", "Returning Cut Head to Home. Wait to retrieve and load")
+        self.logger.info("Prompted user to return to home")
 
     def confirm_cuts(self):
+        self.logger.info("Showing cut confirmation window")
         self.confirmation_window = tk.Toplevel(self)
         self.confirmation_window.attributes("-topmost", True)
         self.confirmation_window.attributes("-fullscreen", True)
@@ -138,15 +162,19 @@ class Application(tk.Tk):
 
         question_label = ttk.Label(self.confirmation_window, text="Is this the correct cut?", font="Arial 32", anchor='center')
         question_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        self.logger.debug("Confirmation question label added")
 
         cut_length = ttk.Label(self.confirmation_window, textvariable=self.message_var, font="Arial 24", anchor='center')
         cut_length.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        self.logger.debug("Cut length label added")
 
         confirmation_button = ttk.Button(self.confirmation_window, text="Confirm", command=lambda: self.confirmation_result(True))
         confirmation_button.grid(row=2, column=0, sticky="nsew")
+        self.logger.debug("Confirmation button added")
 
         cancelation_button = ttk.Button(self.confirmation_window, text="Cancel", command=lambda: self.confirmation_result(False))
         cancelation_button.grid(row=2, column=1, sticky="nsew")
+        self.logger.debug("Cancelation button added")
 
     def confirmation_result(self, response):
         self.logger.info(f"Cut confirmation response: {response}")
@@ -155,6 +183,7 @@ class Application(tk.Tk):
 
     def show_cutting(self):
         self.cancel_flag = False
+        self.logger.info("Showing cutting screen")
         self.cutting_window = tk.Toplevel(self)
         self.cutting_window.attributes("-topmost", True)
         self.cutting_window.attributes("-fullscreen", True)
@@ -167,15 +196,18 @@ class Application(tk.Tk):
 
         cutting_label = ttk.Label(self.cutting_window, text="Cutting in Progress", font="Arial 32", anchor="center")
         cutting_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        self.logger.debug("Cutting in progress label added")
 
         cancel_button = ttk.Button(self.cutting_window, text="Cancel Cut", command=self.cancel_cut)
         cancel_button.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        self.logger.debug("Cancel cut button added")
 
         threading.Thread(target=self.cut, daemon=True).start()
 
     def cut(self):
         try:
             x_len, y_len = self.horizontal_len, self.vertical_len
+            self.logger.info(f"Cut started with x_len={x_len}, y_len={y_len}")
 
             # Horizontal cut
             self.logger.info("Executing horizontal cut")
@@ -188,10 +220,12 @@ class Application(tk.Tk):
                 return
 
             self.cutting_window.destroy()
+            self.logger.debug("Closed cutting window after horizontal cut")
 
             # Prompt for scrap removal
             scrap_event = threading.Event()
             def show_scrap_prompt():
+                self.logger.info("Showing scrap removal prompt")
                 messagebox.showinfo("Remove Scrap", "Remove scrap piece of panel and press OK to continue...")
                 scrap_event.set()
             self.after(0, show_scrap_prompt)
@@ -226,9 +260,11 @@ class Application(tk.Tk):
 
             cutting_label = ttk.Label(self.cutting_window, text="Cutting in Progress", font="Arial 32", anchor="center")
             cutting_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+            self.logger.debug("Cutting in progress label added for vertical cut")
 
             cancel_button = ttk.Button(self.cutting_window, text="Cancel Cut", command=self.cancel_cut)
             cancel_button.grid(row=1, column=0, columnspan=2, sticky="nsew")
+            self.logger.debug("Cancel cut button added for vertical cut")
 
             # Vertical cut
             self.logger.info("Executing vertical cut")
@@ -246,14 +282,17 @@ class Application(tk.Tk):
 
             self.after(0, lambda: self.cutting_window.destroy())
             self.after(0, lambda: messagebox.showinfo("Cut Completed", "The cut has been completed successfully"))
+            self.logger.info("Cut completed successfully")
 
         except Exception as e:
-            self.logger.error(f"Cut error: {str(e)}")
-            self.after(0, lambda: self.cutting_window.destroy())
-            self.after(0, lambda: messagebox.showerror("Cut Error", f"An error occurred during cutting: {str(e)}"))
+            error_msg = f"Cut error: {str(e)}"
+            self.logger.error(error_msg)
+            self.after(0, lambda msg=error_msg: self.cutting_window.destroy())
+            self.after(0, lambda msg=error_msg: messagebox.showerror("Cut Error", f"An error occurred during cutting: {msg}"))
             motor.cleanup_motors()
 
     def confirm_continue(self):
+        self.logger.info("Showing continue confirmation window")
         self.continue_window = tk.Toplevel(self)
         self.continue_window.attributes("-topmost", True)
         self.continue_window.attributes("-fullscreen", True)
@@ -266,12 +305,15 @@ class Application(tk.Tk):
 
         question_label = ttk.Label(self.continue_window, text="Continue with vertical cut?", font="Arial 32", anchor='center')
         question_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        self.logger.debug("Continue question label added")
 
         confirmation_button = ttk.Button(self.continue_window, text="Confirm", command=lambda: self.continue_result(True))
         confirmation_button.grid(row=1, column=0, sticky="nsew")
+        self.logger.debug("Continue confirmation button added")
 
         cancelation_button = ttk.Button(self.continue_window, text="Cancel", command=lambda: self.continue_result(False))
         cancelation_button.grid(row=1, column=1, sticky="nsew")
+        self.logger.debug("Continue cancelation button added")
 
     def continue_result(self, response):
         self.logger.info(f"Continue confirmation response: {response}")
@@ -279,33 +321,47 @@ class Application(tk.Tk):
         self.continue_window.destroy()
 
     def validate_inputs(self):
+        self.logger.info("Validating inputs")
         self.valid_inputs = False
         self.get_vals()
         self.check_numeric()
         self.check_size()
+        self.logger.info(f"Validation result: valid_inputs={self.valid_inputs}, horizontal_len={self.horizontal_len}, vertical_len={self.vertical_len}")
 
         if self.numeric and not self.bad_cut_length:
             self.valid_inputs = True
         else:
             self.valid_inputs = False
+            self.logger.warning("Validation failed due to numeric or size constraints")
 
     def get_vals(self):
-        self.vals = [self.hor.inch.get(), self.hor.frac.get(),
-                     self.vert.inch.get(), self.vert.frac.get()]
+        raw_vals = [self.hor.inch.get(), self.hor.frac.get(),
+                    self.vert.inch.get(), self.vert.frac.get()]
+        self.logger.info(f"Raw input values: {raw_vals}")
+        self.vals = []
+        for val in raw_vals:
+            if not val:
+                self.vals.append(0)
+            else:
+                self.vals.append(val)
 
     def check_numeric(self):
+        self.logger.info("Checking numeric input")
         self.numeric = True
         for i in range(0, 4):
-            if self.vals[i]:
-                if not self.vals[i].isnumeric():
+            if self.vals[i] != 0:
+                if not str(self.vals[i]).isnumeric():
                     self.logger.info(f"Invalid value: {self.vals[i]}")
                     self.numeric = False
+                    self.vals[i] = 0
                 else:
                     self.vals[i] = int(self.vals[i])
             else:
-                self.vals[i] = int(0)
+                self.vals[i] = 0
+        self.logger.info(f"Processed numeric values: {self.vals}")
 
     def check_size(self):
+        self.logger.info("Checking input size constraints")
         self.horizontal_len, self.vertical_len = self.combine_vals()
         self.bad_cut_length = False
         message = ""
@@ -335,26 +391,36 @@ class Application(tk.Tk):
             self.bad_cut_length = True
 
         if self.bad_cut_length:
+            self.logger.warning(f"Size validation failed: {message}")
             messagebox.showwarning("Cut Size Warning", message)
         else:
             message = (f"Horizontal: {self.horizontal_len} in, Vertical: {self.vertical_len} in")
-        
-        self.logger.info(message)
+            self.logger.info(message)
 
     def make_hor_printout(self):
         hor_len = f"{self.vals[0]} {self.vals[1]}/8"
+        self.logger.debug(f"Horizontal printout: {hor_len}")
         return hor_len
     
     def make_ver_printout(self):
         ver_len = f"{self.vals[2]} {self.vals[3]}/8"
+        self.logger.debug(f"Vertical printout: {ver_len}")
         return ver_len
     
     def combine_vals(self):
-        hor_len = self.vals[0] + self.vals[1] * (1/8)
-        ver_len = self.vals[2] + self.vals[3] * (1/8)
+        self.logger.info(f"Combining values: {self.vals}")
+        try:
+            hor_len = self.vals[0] + self.vals[1] * (1/8)
+            ver_len = self.vals[2] + self.vals[3] * (1/8)
+        except TypeError as e:
+            self.logger.error(f"Error combining values: {str(e)}, vals={self.vals}")
+            hor_len = 0
+            ver_len = 0
+        self.logger.debug(f"Combined values: horizontal_len={hor_len}, vertical_len={ver_len}")
         return hor_len, ver_len
     
     def clear_entries(self):
+        self.logger.info("Clearing input entries")
         for input_measure in [self.hor, self.vert]:
             input_measure.inch.delete(0, tk.END)
             input_measure.frac.delete(0, tk.END)
@@ -365,7 +431,6 @@ class InputMeasure(ttk.Frame):
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
-
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
@@ -388,84 +453,85 @@ class InputMeasure(ttk.Frame):
 class KeyBoard(ttk.Frame):
     def __init__(self, parent, input_measures, logger):
         super().__init__(parent)
-
         self.logger = logger
+        self.logger.info("Initializing KeyBoard")
         
         self.input_measures = input_measures
-        self.active_entry = input_measures[0].inch
+        self.active_entry = input_measures[0].inch if input_measures else None
+        self.logger.debug(f"Initial active entry: {self.active_entry}")
 
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
+        self.columnconfigure(0, weight=1, minsize=100)
+        self.columnconfigure(1, weight=1, minsize=100)
+        self.columnconfigure(2, weight=1, minsize=100)
+        self.rowconfigure(0, weight=1, minsize=40)
+        self.rowconfigure(1, weight=1, minsize=40)
+        self.rowconfigure(2, weight=1, minsize=40)
+        self.rowconfigure(3, weight=1, minsize=40)
 
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-        self.rowconfigure(2, weight=1)
-        self.rowconfigure(3, weight=1)
+        self.one = ttk.Button(self, text="1", command=lambda: self.insert_text(1), width=10)
+        self.one.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
-        self.one = ttk.Button(self, text="1", command=lambda: self.insert_text(1))
-        self.one.grid(row=0, column=0, sticky="nsew")
+        self.two = ttk.Button(self, text="2", command=lambda: self.insert_text(2), width=10)
+        self.two.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
-        self.two = ttk.Button(self, text="2", command=lambda: self.insert_text(2))
-        self.two.grid(row=0, column=1, sticky="nsew")
+        self.three = ttk.Button(self, text="3", command=lambda: self.insert_text(3), width=10)
+        self.three.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
 
-        self.three = ttk.Button(self, text="3", command=lambda: self.insert_text(3))
-        self.three.grid(row=0, column=2, sticky="nsew")
+        self.four = ttk.Button(self, text="4", command=lambda: self.insert_text(4), width=10)
+        self.four.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
 
-        self.four = ttk.Button(self, text="4", command=lambda: self.insert_text(4))
-        self.four.grid(row=1, column=0, sticky="nsew")
+        self.five = ttk.Button(self, text="5", command=lambda: self.insert_text(5), width=10)
+        self.five.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
 
-        self.five = ttk.Button(self, text="5", command=lambda: self.insert_text(5))
-        self.five.grid(row=1, column=1, sticky="nsew")
+        self.six = ttk.Button(self, text="6", command=lambda: self.insert_text(6), width=10)
+        self.six.grid(row=1, column=2, static="nsew", padx=5, pady=5)
 
-        self.six = ttk.Button(self, text="6", command=lambda: self.insert_text(6))
-        self.six.grid(row=1, column=2, sticky="nsew")
+        self.seven = ttk.Button(self, text="7", command=lambda: self.insert_text(7), width=10)
+        self.seven.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
 
-        self.seven = ttk.Button(self, text="7", command=lambda: self.insert_text(7))
-        self.seven.grid(row=2, column=0, sticky="nsew")
+        self.eight = ttk.Button(self, text="8", command=lambda: self.insert_text(8), width=10)
+        self.eight.grid(row=2, column=1, sticky="nsew", padx=5, pady=5)
 
-        self.eight = ttk.Button(self, text="8", command=lambda: self.insert_text(8))
-        self.eight.grid(row=2, column=1, sticky="nsew")
+        self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9), width=10)
+        self.nine.grid(row=2, column=2, sticky="nsew", padx=5, pady=5)
 
-        self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9))
-        self.nine.grid(row=2, column=2, sticky="nsew")
+        self.next = ttk.Button(self, text="Next", command=self.switch_entry, width=10)
+        self.next.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
 
-        try:
-            self.checkmark_image = PhotoImage(file=config.NEXT_IMAGE)
-            self.next = ttk.Button(self, text="Next", image=self.checkmark_image, command=self.switch_entry)
-        except tk.TclError:
-            self.logger.error("Failed to load checkmark image")
-            self.next = ttk.Button(self, text="Next", command=self.switch_entry)
-        self.next.grid(row=3, column=0, sticky="nsew")
+        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0), width=10)
+        self.zero.grid(row=3, column=1, sticky="nsew", padx=5, pady=5)
 
-        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
-        self.zero.grid(row=3, column=1, sticky="nsew")
-
-        try:
-            self.delete_image = PhotoImage(file=config.DELETE_IMAGE)
-            self.delete = ttk.Button(self, text="Delete", image=self.delete_image, command=self.delete_text)
-        except tk.TclError:
-            self.logger.error("Failed to load delete image")
-            self.delete = ttk.Button(self, text="Delete", command=self.delete_text)
-        self.delete.grid(row=3, column=2, sticky="nsew")
+        self.delete = ttk.Button(self, text="Delete", command=self.delete_text, width=10)
+        self.delete.grid(row=3, column=2, sticky="nsew", padx=5, pady=5)
         
+        self.logger.info("Keyboard buttons initialized")
+
     def insert_text(self, char):
         if self.active_entry:
             self.active_entry.insert(tk.END, str(char))
             self.active_entry.focus_set()
+            self.logger.info(f"Inserted {char} into {self.active_entry}")
 
     def delete_text(self):
-        current_text = self.active_entry.get()
-        if current_text:
-            self.active_entry.delete(len(current_text)-1, tk.END)
-        else:
-            self.switch_entry_back()
+        if self.active_entry:
+            current_text = self.active_entry.get()
+            if current_text:
+                self.active_entry.delete(len(current_text)-1, tk.END)
+                self.logger.info(f"Deleted character from {self.active_entry}")
+            else:
+                self.switch_entry_back()
+                self.logger.info(f"Switched back entry due to empty field")
 
     def reset_entry(self):
-        self.active_entry = self.input_measures[0].inch
-        self.active_entry.focus_set()
+        self.active_entry = self.input_measures[0].inch if self.input_measures else None
+        self.logger.info(f"Reset active entry to {self.active_entry}")
+        if self.active_entry:
+            self.active_entry.focus_set()
 
     def switch_entry(self):
+        if not self.active_entry or not self.input_measures:
+            self.logger.warning("No active entry or input measures for switch_entry")
+            return
         if self.active_entry == self.input_measures[0].inch:
             self.active_entry = self.input_measures[0].frac
         elif self.active_entry == self.input_measures[0].frac:
@@ -475,8 +541,12 @@ class KeyBoard(ttk.Frame):
         else:
             self.active_entry = self.input_measures[0].inch  
         self.active_entry.focus_set()
+        self.logger.info(f"Switched to active entry: {self.active_entry}")
 
     def switch_entry_back(self):
+        if not self.active_entry or not self.input_measures:
+            self.logger.warning("No active entry or input measures for switch_entry_back")
+            return
         if self.active_entry == self.input_measures[0].inch:
             self.active_entry = self.input_measures[1].frac
         elif self.active_entry == self.input_measures[0].frac:
@@ -486,3 +556,4 @@ class KeyBoard(ttk.Frame):
         else:
             self.active_entry = self.input_measures[1].inch 
         self.active_entry.focus_set()
+        self.logger.info(f"Switched back to active entry: {self.active_entry}")

@@ -1,47 +1,10 @@
 import time
 import config
-#import keyboard
-import threading
+import RPi.GPIO as GPIO
+import logging
 
-# Set this to True when running on Raspberry Pi
-RUN_ON_PI = True
-
-# Conditionally import RPi.GPIO
-if RUN_ON_PI:
-    import RPi.GPIO as GPIO
-else:
-    class GPIO_Mock:
-        BOARD = "BOARD"
-        OUT = "OUT"
-        LOW = "LOW"
-        HIGH = "HIGH"
-
-        def setmode(self, mode):
-            print(f"Mock GPIO: Set mode {mode}")
-            
-
-        def setwarnings(self, flag):
-            print(f"Mock GPIO: Set warnings {flag}")
-
-        def setup(self, pin, mode):
-            print(f"Mock GPIO: Setup pin {pin} as {mode}")
-
-        def output(self, pin, state):
-            #print(f"Mock GPIO: Set pin {pin} to {state}")
-            return 1
-
-        def PWM(self, pin, freq):
-            print(f"Mock GPIO: Start PWM on pin {pin} with frequency {freq}")
-            return self.MockPWM()
-
-        def cleanup(self):
-            print("Mock GPIO: Cleanup")
-
-        class MockPWM:
-            def start(self, duty_cycle):
-                print(f"Mock PWM: Started with duty cycle {duty_cycle}")
-
-    GPIO = GPIO_Mock()  # Use mock GPIO when not on Pi
+# Configure logger for standalone use
+logger = logging.getLogger(__name__)
 
 def init_motors():
     """
@@ -51,44 +14,37 @@ def init_motors():
     - Sets the motor and actuator pins as output.
     - Starts the actuator's PWM signal at 25% duty cycle.
     """
-    GPIO.setmode(GPIO.BOARD)  # Set GPIO mode to BOARD numbering
-    GPIO.setwarnings(False)  # Suppress GPIO warnings
+    logger.info("Initializing motors")
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setwarnings(False)
 
     global MOTOR_PINS
-    global ACTUATOR_LOC
-    ACTUATOR_LOC = 0
     MOTOR_PINS = {
         "x": (config.X_DIR_PIN, config.X_PWM_PIN, config.X_STEPS_PER_REV, config.X_PITCH),
         "y": (config.Y_DIR_PIN, config.Y_PWM_PIN, config.Y_STEPS_PER_REV, config.Y_PITCH),
         "z": (config.Z_DIR_PIN, config.Z_PWM_PIN, config.Z_STEPS_PER_REV, config.Z_PITCH),
     }
+    logger.debug(f"Motor pins configured: {MOTOR_PINS}")
 
-    for _, (dir_pin, pwm_pin, _, _) in MOTOR_PINS.items():
-        GPIO.setup(dir_pin, GPIO.OUT)  # Set direction pin as output
-        GPIO.setup(pwm_pin, GPIO.OUT)  # Set PWM pin as output
+    for motor, (dir_pin, pwm_pin, _, _) in MOTOR_PINS.items():
+        GPIO.setup(dir_pin, GPIO.OUT)
+        GPIO.setup(pwm_pin, GPIO.OUT)
+        logger.debug(f"Set up {motor} motor: dir_pin={dir_pin}, pwm_pin={pwm_pin}")
 
-    GPIO.setup(config.A_PWM_PIN, GPIO.OUT)  # Actuator PWM pin setup
-    GPIO.setup(config.A_FOR_PIN, GPIO.OUT)  # Actuator forward pin setup
-    GPIO.setup(config.A_REV_PIN, GPIO.OUT)  # Actuator reverse pin setup
+    GPIO.setup(config.A_PWM_PIN, GPIO.OUT)
+    GPIO.setup(config.A_FOR_PIN, GPIO.OUT)
+    GPIO.setup(config.A_REV_PIN, GPIO.OUT)
+    logger.debug(f"Actuator pins set up: A_PWM_PIN={config.A_PWM_PIN}, A_FOR_PIN={config.A_FOR_PIN}, A_REV_PIN={config.A_REV_PIN}")
 
     GPIO.output(config.A_PWM_PIN, GPIO.HIGH)
+    logger.info("Actuator PWM signal set to HIGH")
 
 def cleanup_motors():
     """
     Cleans up the GPIO pins to reset them to their default state.
     """
+    logger.info("Cleaning up motor GPIO pins")
     GPIO.cleanup()
-
-# def listen_for_stop():
-#     """
-#     Listens for an emergency stop key ('q') and stops all motor operations when triggered.
-#     """
-#     global emergency_stop
-#     keyboard.wait("q")  # Wait for 'q' key press to trigger emergency stop
-#     emergency_stop = True
-#     print("Emergency stop activated. Exiting...")
-#     GPIO.cleanup()
-#     exit()
 
 def rotate_motor(motor, direction, distance, rpm):
     """
@@ -97,163 +53,141 @@ def rotate_motor(motor, direction, distance, rpm):
     - direction: 'l' (left), 'r' (right), 'u' (up), 'd' (down)
     - distance: Distance in inches
     - rpm: Rotational speed in revolutions per minute
-
-    The function calculates the required number of steps, applies a ramp-up phase followed by
-    constant speed, and sends PWM signals accordingly. No ramp-down is performed.
     """
-    # Retrieve motor control pins and parameters
+    logger.info(f"Rotating {motor} motor: direction={direction}, distance={distance} in, rpm={rpm}")
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
+    logger.debug(f"Using pins: dir_pin={dir_pin}, pwm_pin={pwm_pin}, steps={steps}, pitch={pitch}")
 
-    # Set motor direction based on input ('l' and 'u' -> LOW, 'r' and 'd' -> HIGH)
     GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u', 'o'] else GPIO.HIGH)
-
-    # Calculate total steps needed based on distance and pitch
+    logger.debug(f"Set {motor} direction to {'LOW' if direction in ['l', 'u', 'o'] else 'HIGH'}")
 
     total_steps = int(distance * steps * pitch)
-    print(f"Total steps for {motor} motor: {total_steps}")
-    target_frequency = rpm * steps / 60  # Convert RPM to step frequency (steps per second)
+    logger.info(f"Calculated total steps for {motor}: {total_steps}")
+    target_frequency = rpm * steps / 60
+    logger.debug(f"Target frequency: {target_frequency} Hz")
 
-    # Define ramp parameters (fixed ramp time in seconds for ramp-up)
-    RAMP_TIME = 0.5  # Time for ramp-up (adjust as needed)
-    ramp_steps = int(target_frequency * RAMP_TIME)  # Steps for ramp-up
-    ramp_steps = max(1, min(ramp_steps, 200))  # Cap between 1 and 200 steps
+    RAMP_TIME = 0.5
+    ramp_steps = int(target_frequency * RAMP_TIME)
+    ramp_steps = max(1, min(ramp_steps, 200))
+    logger.debug(f"Ramp steps: {ramp_steps}, ramp time: {RAMP_TIME} s")
 
-    # Calculate frequency increment for ramp-up
     frequency_increment = target_frequency / ramp_steps if ramp_steps > 0 else target_frequency
+    logger.debug(f"Frequency increment: {frequency_increment}")
 
-    # Ramp-up phase
     for step in range(ramp_steps):
         current_frequency = frequency_increment * (step + 1)
-        sleep_time = 1 / (current_frequency * 2)  # Calculate delay for step signal
-        GPIO.output(pwm_pin, GPIO.HIGH)  # Step signal ON
+        sleep_time = 1 / (current_frequency * 2)
+        GPIO.output(pwm_pin, GPIO.HIGH)
         time.sleep(sleep_time)
-        GPIO.output(pwm_pin, GPIO.LOW)  # Step signal OFF
+        GPIO.output(pwm_pin, GPIO.LOW)
         time.sleep(sleep_time)
+    logger.debug("Completed ramp-up phase")
 
-    # Constant speed phase
-    constant_steps = total_steps - ramp_steps  # Steps at full speed
+    constant_steps = total_steps - ramp_steps
     if constant_steps > 0:
-        sleep_time = 1 / (target_frequency * 2)  # Sleep time for target frequency
+        sleep_time = 1 / (target_frequency * 2)
         for _ in range(constant_steps):
-            GPIO.output(pwm_pin, GPIO.HIGH)  # Step signal ON
+            GPIO.output(pwm_pin, GPIO.HIGH)
             time.sleep(sleep_time)
-            GPIO.output(pwm_pin, GPIO.LOW)  # Step signal OFF
+            GPIO.output(pwm_pin, GPIO.LOW)
             time.sleep(sleep_time)
+        logger.debug(f"Completed {constant_steps} constant speed steps")
 
 def move_actuator(direction):
     """
     Moves the actuator in the specified direction ('o' for out, 'i' for in).
     """
-    # global emergency_stop
-    # if emergency_stop:
-    #     return
-
-    global ACTUATOR_LOC
-
-    if direction not in ["i", "o"]:
-        print("Invalid direction. Use 'i' for in or 'o' for out.")
-        return
-
+    logger.info(f"Moving actuator: direction={direction}")
+    if direction == "o":
+        logger.debug("Setting actuator to move out")
+        GPIO.output(config.A_FOR_PIN, GPIO.HIGH)
+        GPIO.output(config.A_REV_PIN, GPIO.LOW)
+    elif direction == "i":
+        logger.debug("Setting actuator to move in")
+        GPIO.output(config.A_FOR_PIN, GPIO.LOW)
+        GPIO.output(config.A_REV_PIN, GPIO.HIGH)
     else:
-        try:
-            GPIO.output(config.A_PWM_PIN, GPIO.HIGH)  # Start PWM signal
-            if direction == "i" and ACTUATOR_LOC == 1 or direction == "o" and ACTUATOR_LOC == 0:
-                for _ in range(13):
-                    time.sleep(1)
-                    print("Actuator moving...")
-                    # Set actuator movement direction
-                    if direction == "i":
-                        GPIO.output(config.A_FOR_PIN, GPIO.HIGH)  # Extend actuator
-                        GPIO.output(config.A_REV_PIN, GPIO.LOW)
-                    elif direction == "o":  # direction == "i"
-                        GPIO.output(config.A_FOR_PIN, GPIO.LOW)
-                        GPIO.output(config.A_REV_PIN, GPIO.HIGH)  # Retract actuator
-                if ACTUATOR_LOC == 0:
-                    ACTUATOR_LOC = 1
-                else:
-                    ACTUATOR_LOC = 0
-            GPIO.output(config.A_FOR_PIN, GPIO.LOW)  # Stop actuator movement
-            GPIO.output(config.A_REV_PIN, GPIO.LOW)  # Stop actuator movement
-            GPIO.output(config.A_PWM_PIN, GPIO.LOW)  # Stop PWM signal
-            
-
-        except Exception as e:
-            print(f"Error in move_actuator: {e}")
+        logger.error(f"Invalid actuator direction: {direction}. Use 'i' for in or 'o' for out.")
+        return
+    
+    for _ in range(13):
+        time.sleep(1)
+        logger.debug("Actuator moving...")
 
 def move_head(direction):
     """
     Moves the cutting head along the Z-axis in the specified direction.
     """
-    # global emergency_stop
-    # if emergency_stop:
-    #     return
-    print(f"Moving head {direction}")
-    rotate_motor("z", direction, config.Z_JOG, config.Z_RPM)  
+    logger.info(f"Moving head: direction={direction}")
+    rotate_motor("z", direction, config.Z_JOG, config.Z_RPM)
 
 def return_to_home(x_len, y_len):
     """
     Returns the machine to its home position after a cutting operation.
     - Moves head up, retracts actuator, and repositions X and Y axes.
     """
-    # global emergency_stop
-    # if emergency_stop:
-    #     return
-    print("Returning to home position...")
-    move_head("o")  # Raise the cutting head
-    move_actuator("i")  # Retract actuator
-    
-    rotate_motor("y", "u", config.MAX_VERTICAL, config.Y_RPM)  # Move Y-axis back to home
-    rotate_motor("x", "l", x_len, config.X_RPM)  # Move X-axis back to home
-    
+    logger.info(f"Returning to home position: x_len={x_len}, y_len={y_len}")
+    move_head("o")
+    move_actuator("i")
+    rotate_motor("y", "u", config.MAX_VERTICAL, config.Y_RPM)
+    rotate_motor("x", "l", x_len, config.X_RPM)
+    logger.info("Home position reached")
+
+def return_to_home_from_hor_cut(y_len):
+    """
+    Returns the machine to its home position from the horizontal cut location.
+    - Assumes head is lowered and actuator is extended.
+    - Raises head, retracts actuator, moves Y-axis to home, and X-axis to home.
+    """
+    logger.info(f"Returning to home from horizontal cut: y_len={y_len}")
+    move_actuator("i")
+    rotate_motor("y", "u", config.MAX_VERTICAL - y_len, config.Y_RPM)
+    rotate_motor("x", "l", config.MAX_HORIZONTAL, config.X_RPM)
+    logger.info("Home position reached from horizontal cut")
+
+def make_hor_cut(y_len):
+    """
+    Performs the horizontal cut by moving Y-axis, extending actuator, lowering head, and moving X-axis.
+    """
+    logger.info(f"Starting horizontal cut: y_len={y_len}")
+    rotate_motor("y", "d", config.MAX_VERTICAL - y_len, config.Y_RPM)
+    move_actuator("o")
+    move_head("i")
+    rotate_motor("x", "r", config.MAX_HORIZONTAL, config.X_RPM)
+    move_head("o")
+    logger.info("Horizontal cut completed")
+
+def make_ver_cut(x_len, y_len):
+    """
+    Performs the vertical cut by moving X-axis, retracting actuator, lowering head, and moving Y-axis.
+    """
+    logger.info(f"Starting vertical cut: x_len={x_len}, y_len={y_len}")
+    rotate_motor("x", "l", config.MAX_HORIZONTAL - x_len, config.X_RPM)
+    move_actuator("i")
+    move_head("i")
+    rotate_motor("y", "d", y_len, config.Y_RPM)
+    logger.info("Vertical cut completed")
 
 def main():
     """
-    Main function to run the cutting sequence.
-    - Initializes motors and starts emergency stop listener.
-    - Accepts user input for cut dimensions and executes the cutting sequence.
-    - Returns to home position after cutting and waits for user confirmation.
+    Main function to run the cutting sequence for testing.
     """
-    # global emergency_stop
-    # emergency_stop = False
-
+    logger.info("Starting motor test sequence")
     init_motors()
-
-    # Start the emergency stop listener in a separate thread
-    # stop_thread = threading.Thread(target=listen_for_stop, daemon=True).start()
-
-    print(f"{config.X_RPM} X {config.Y_RPM} Y")
-
     try:
         while True:
-            x_len = int(input("Enter the length of the X cut in inches: "))  # Get X cut length from user
-            y_len = int(input("Enter the length of the Y cut in inches: "))  # Get Y cut length from user
-
-            print(f"Cutting {x_len} inches in X and {y_len} inches in Y")
-            print(f"Moving down to height of cut...")
-            rotate_motor("y", "d", config.MAX_VERTICAL - y_len, config.Y_RPM)
-            move_actuator("o")  # Extend actuator
-            move_head("i")  # Lower cutting head
-
-            rotate_motor("x", "r", config.MAX_HORIZONTAL, config.X_RPM)
-
-            move_head("o")  # Raise cutting head
-
+            x_len = int(input("Enter the length of the X cut in inches: "))
+            y_len = int(input("Enter the length of the Y cut in inches: "))
+            logger.info(f"Test cut initiated: x_len={x_len}, y_len={y_len}")
+            make_hor_cut(y_len)
             input("Remove scrap piece of panel and press Enter to continue...")
-
-            rotate_motor("x", "l", config.MAX_HORIZONTAL - x_len, config.X_RPM)
-            move_actuator("i")  # Retract actuator
-            move_head("i")  # Lower cutting head
-
-            rotate_motor("y", "d", y_len, config.Y_RPM)
-            
-            print("Cutting complete. Returning to home position...")
+            make_ver_cut(x_len, y_len)
+            logger.info("Cutting complete. Returning to home position...")
             return_to_home(x_len, y_len)
-
-            input("Returned to home position. Remove panel and scrap piece and press Enter to continue...")    
-    
+            input("Returned to home position. Remove panel and scrap piece and press Enter to continue...")
     except KeyboardInterrupt:
-        print("Exiting")
-        GPIO.cleanup()
+        logger.info("Test sequence interrupted by user")
+        cleanup_motors()
 
 if __name__ == "__main__":
     main()
