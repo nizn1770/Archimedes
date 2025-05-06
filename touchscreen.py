@@ -7,6 +7,7 @@ from tkinter import ttk
 from tkinter import PhotoImage
 from tkinter import messagebox
 import os
+import requests
 
 class Application(tk.Tk):
     def __init__(self, logger):
@@ -505,13 +506,59 @@ class KeyBoard(ttk.Frame):
         self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9), width=10)
         self.nine.grid(row=2, column=2, sticky="nsew", padx=5, pady=5)
 
-        self.next = ttk.Button(self, text="Next", command=self.switch_entry, width=10)
-        self.next.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
+        self.checkmark_image = self.download_image(config.NEXT_IMAGE)
+        self.next = ttk.Button(self, text="N", image=self.checkmark_image, command=self.switch_entry)
+        self.next.grid(row=3, column=0, sticky="nsew")
 
-        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0), width=10)
-        self.zero.grid(row=3, column=1, sticky="nsew", padx=5, pady=5)
+        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
+        self.zero.grid(row=3, column=1, sticky="nsew")
 
-        self.delete = ttk.Button(self, text="Delete", command=self.delete_text, width=10)
-        self.delete.grid(row=3, column=2, sticky="nsew", padx=5, pady=5)
+        self.delete_image = self.download_image(config.DELETE_IMAGE)
+        self.delete = ttk.Button(self, text="D", image=self.delete_image,  command=self.delete_text)
+        self.delete.grid(row=3, column=2, sticky="nsew")
         
-        self.logger.info("Keyboard buttons initialized")
+    def download_image(self, image_url):
+        response = requests.get(image_url)
+        image_data = response.content
+        return PhotoImage(data=image_data)
+
+    def insert_text(self, char):
+        if self.active_entry:
+            self.active_entry.insert(tk.END, str(char))
+            self.active_entry.focus_set()
+
+    def delete_text(self):
+        current_text = self.active_entry.get()
+
+        if current_text:
+            self.active_entry.delete(len(current_text)-1,tk.END)
+        else:
+            self.switch_entry_back()
+
+    def reset_entry(self):
+        self.active_entry = self.input_measures[0].inch
+        self.active_entry.focus_set()
+
+    def switch_entry(self):
+        if self.active_entry == self.input_measures[0].inch:
+            self.active_entry = self.input_measures[0].frac
+        elif self.active_entry == self.input_measures[0].frac:
+            self.active_entry = self.input_measures[1].inch
+        elif self.active_entry == self.input_measures[1].inch:
+            self.active_entry = self.input_measures[1].frac
+        else:
+            self.active_entry = self.input_measures[0].inch  
+
+        self.active_entry.focus_set()
+
+    def switch_entry_back(self):
+        if self.active_entry == self.input_measures[0].inch:
+            self.active_entry = self.input_measures[1].frac
+        elif self.active_entry == self.input_measures[0].frac:
+            self.active_entry = self.input_measures[0].inch 
+        elif self.active_entry == self.input_measures[1].inch:
+            self.active_entry = self.input_measures[0].frac
+        else:
+            self.active_entry = self.input_measures[1].inch 
+
+        self.active_entry.focus_set()
