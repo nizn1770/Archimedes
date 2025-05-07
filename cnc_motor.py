@@ -146,7 +146,6 @@ def return_to_home(x_len, y_len):
     """
     logger.info(f"Returning to home position: x_len={x_len}, y_len={y_len}")
     move_head("o")
-    move_actuator("i")
     rotate_motor("y", "u", config.MAX_VERTICAL, config.Y_RPM)
     rotate_motor("x", "l", x_len, config.X_RPM)
     logger.info("Home position reached")
