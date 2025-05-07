@@ -100,7 +100,7 @@ def rotate_motor(motor, direction, distance, rpm):
 
     # Define ramp parameters (fixed ramp time in seconds for ramp-up)
     if motor == "x":
-        RAMP_TIME = 1.5
+        RAMP_TIME = 2.0
     else:
         RAMP_TIME = 0.5  # Time for ramp-up (adjust as needed)
     ramp_steps = int(target_frequency * RAMP_TIME)  # Steps for ramp-up
