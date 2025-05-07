@@ -77,6 +77,7 @@ class Application(tk.Tk):
             if logo_image:
                 # Cache the downloaded image
                 try:
+                    os.makedirs("images", exist_ok=True)
                     with open(cached_image_path, "wb") as f:
                         response = requests.get(config.LOGO_IMAGE, timeout=5)
                         f.write(response.content)
@@ -419,130 +420,274 @@ class Application(tk.Tk):
             self.logger.warning("Fullscreen failed for continue window, setting fixed geometry")
             self.continue_window.geometry("800x480")
         self.continue_window.title("Continue Cut")
-        self.continue_window.focus_force
+        self.continue_window.focus_force()
+        self.logger.debug(f"Continue window created: {self.continue_window.winfo_geometry()}")
 
-    class InputMeasure(ttk.Frame):
-        def __init__(self, parent, title_text):
-            super().__init__(parent)
+        self.continue_window.columnconfigure(0, weight=1)
+        self.continue_window.columnconfigure(1, weight=1)
+        self.continue_window.rowconfigure(0, weight=1)
+        self.continue_window.rowconfigure(1, weight=1)
 
-            self.columnconfigure(0, weight=1)
-            self.columnconfigure(1, weight=1)
+        question_label = ttk.Label(self.continue_window, text="Continue with vertical cut?", font="Arial 32", anchor='center')
+        question_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        self.logger.debug("Continue question label added")
 
-            self.rowconfigure(0, weight=1)
-            self.rowconfigure(1, weight=1)
-            self.rowconfigure(2, weight=1)
+        confirmation_button = ttk.Button(self.continue_window, text="Confirm", command=lambda: self.continue_result(True))
+        confirmation_button.grid(row=1, column=0, sticky="nsew")
+        self.logger.debug("Continue confirmation button added")
 
-            self.title = ttk.Label(self, text=title_text, font=('Arial 16'))
-            self.title.grid(row=0, column=0, columnspan=2, sticky="ew")
+        cancelation_button = ttk.Button(self.continue_window, text="Cancel", command=lambda: self.continue_result(False))
+        cancelation_button.grid(row=1, column=1, sticky="nsew")
+        self.logger.debug("Continue cancelation button added")
 
-            self.inch = ttk.Entry(self, font=('Arial 12'))
-            self.inch.grid(row=1, column=0, sticky="ew")
+    def continue_result(self, response):
+        self.logger.info(f"Continue confirmation response: {response}")
+        self.continue_response = response
+        self.continue_window.destroy()
 
-            self.inch_label = ttk.Label(self, text="Inches", font=('Arial 12'))
-            self.inch_label.grid(row=2, column=0, sticky="n")
+    def validate_inputs(self):
+        self.logger.info("Validating inputs")
+        self.valid_inputs = False
+        self.get_vals()
+        self.check_numeric()
+        self.check_size()
+        self.logger.info(f"Validation result: valid_inputs={self.valid_inputs}, horizontal_len={self.horizontal_len}, vertical_len={self.vertical_len}")
 
-            self.frac = ttk.Entry(self, font=('Arial 12'))
-            self.frac.grid(row=1, column=1, sticky="ew")
+        if self.numeric and not self.bad_cut_length:
+            self.valid_inputs = True
+        else:
+            self.valid_inputs = False
+            self.logger.warning("Validation failed due to numeric or size constraints")
 
-            self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial 12'))
-            self.frac_label.grid(row=2, column=1, sticky="n")
+    def get_vals(self):
+        raw_vals = [self.hor.inch.get(), self.hor.frac.get(),
+                    self.vert.inch.get(), self.vert.frac.get()]
+        self.logger.info(f"Raw input values: {raw_vals}")
+        self.vals = []
+        for val in raw_vals:
+            if not val:
+                self.vals.append(0)
+            else:
+                self.vals.append(val)
 
-    class KeyBoard(ttk.Frame):
-        def __init__(self, parent, input_measures):
-            super().__init__(parent)
-            
-            self.input_measures = input_measures
-            self.active_entry = input_measures[0].inch
+    def check_numeric(self):
+        self.logger.info("Checking numeric input")
+        self.numeric = True
+        for i in range(0, 4):
+            if self.vals[i] != 0:
+                if not str(self.vals[i]).isnumeric():
+                    self.logger.info(f"Invalid value: {self.vals[i]}")
+                    self.numeric = False
+                    self.vals[i] = 0
+                else:
+                    self.vals[i] = int(self.vals[i])
+            else:
+                self.vals[i] = 0
+        self.logger.info(f"Processed numeric values: {self.vals}")
 
-            self.columnconfigure(0, weight=1)
-            self.columnconfigure(1, weight=1)
-            self.columnconfigure(2, weight=1)
+    def check_size(self):
+        self.logger.info("Checking input size constraints")
+        self.horizontal_len, self.vertical_len = self.combine_vals()
+        self.bad_cut_length = False
+        message = ""
 
-            self.rowconfigure(0, weight=1)
-            self.rowconfigure(1, weight=1)
-            self.rowconfigure(2, weight=1)
-            self.rowconfigure(3, weight=1)
+        if self.horizontal_len > config.MAX_HORIZONTAL:
+            message += (f"\nHorizontal cut is too large:\n"
+                       f"Max Horizontal Cut: {config.MAX_HORIZONTAL} in\n"
+                       f"Input Horizontal Cut: {self.horizontal_len} in\n")
+            self.bad_cut_length = True
+        
+        if self.horizontal_len < config.MIN_HORIZONTAL:
+            message += (f"\nHorizontal cut is too small:\n"
+                       f"Min Horizontal Cut: {config.MIN_HORIZONTAL} in\n"
+                       f"Input Horizontal Cut: {self.horizontal_len} in\n")
+            self.bad_cut_length = True
 
-            self.one = ttk.Button(self, text="1", command=lambda: self.insert_text(1))
-            self.one.grid(row=0, column=0, sticky="nsew")
+        if self.vertical_len > config.MAX_VERTICAL:
+            message += (f"\nVertical cut is too large:\n"
+                       f"Max Vertical Cut: {config.MAX_VERTICAL} in\n"
+                       f"Input Vertical Cut: {self.vertical_len} in\n")
+            self.bad_cut_length = True
+                
+        if self.vertical_len < config.MIN_VERTICAL:
+            message += (f"\nVertical cut is too small:\n"
+                       f"Min Vertical Cut: {config.MIN_VERTICAL} in\n"
+                       f"Input Vertical Cut: {self.vertical_len} in\n")
+            self.bad_cut_length = True
 
-            self.two = ttk.Button(self, text="2", command=lambda: self.insert_text(2))
-            self.two.grid(row=0, column=1, sticky="nsew")
+        if self.bad_cut_length:
+            self.logger.warning(f"Size validation failed: {message}")
+            messagebox.showwarning("Cut Size Warning", message)
+        else:
+            message = (f"Horizontal: {self.horizontal_len} in, Vertical: {self.vertical_len} in")
+            self.logger.info(message)
 
-            self.three = ttk.Button(self, text="3", command=lambda: self.insert_text(3))
-            self.three.grid(row=0, column=2, sticky="nsew")
+    def make_hor_printout(self):
+        hor_len = f"{self.vals[0]} {self.vals[1]}/8"
+        self.logger.debug(f"Horizontal printout: {hor_len}")
+        return hor_len
+    
+    def make_ver_printout(self):
+        ver_len = f"{self.vals[2]} {self.vals[3]}/8"
+        self.logger.debug(f"Vertical printout: {ver_len}")
+        return ver_len
+    
+    def combine_vals(self):
+        self.logger.info(f"Combining values: {self.vals}")
+        try:
+            hor_len = self.vals[0] + self.vals[1] * (1/8)
+            ver_len = self.vals[2] + self.vals[3] * (1/8)
+        except TypeError as e:
+            self.logger.error(f"Error combining values: {str(e)}, vals={self.vals}")
+            hor_len = 0
+            ver_len = 0
+        self.logger.debug(f"Combined values: horizontal_len={hor_len}, vertical_len={ver_len}")
+        return hor_len, ver_len
+    
+    def clear_entries(self):
+        self.logger.info("Clearing input entries")
+        for input_measure in [self.hor, self.vert]:
+            input_measure.inch.delete(0, tk.END)
+            input_measure.frac.delete(0, tk.END)
 
-            self.four = ttk.Button(self, text="4", command=lambda: self.insert_text(4))
-            self.four.grid(row=1, column=0, sticky="nsew")
+class InputMeasure(ttk.Frame):
+    def __init__(self, parent, title_text):
+        super().__init__(parent)
 
-            self.five = ttk.Button(self, text="5", command=lambda: self.insert_text(5))
-            self.five.grid(row=1, column=1, sticky="nsew")
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
 
-            self.six = ttk.Button(self, text="6", command=lambda: self.insert_text(6))
-            self.six.grid(row=1, column=2, sticky="nsew")
+        self.title = ttk.Label(self, text=title_text, font=('Arial', 16))
+        self.title.grid(row=0, column=0, columnspan=2, sticky="ew")
 
-            self.seven = ttk.Button(self, text="7", command=lambda: self.insert_text(7))
-            self.seven.grid(row=2, column=0, sticky="nsew")
+        self.inch = ttk.Entry(self, font=('Arial', 12))
+        self.inch.grid(row=1, column=0, sticky="ew")
 
-            self.eight = ttk.Button(self, text="8", command=lambda: self.insert_text(8))
-            self.eight.grid(row=2, column=1, sticky="nsew")
+        self.inch_label = ttk.Label(self, text="Inches", font=('Arial', 12))
+        self.inch_label.grid(row=2, column=0, sticky="n")
 
-            self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9))
-            self.nine.grid(row=2, column=2, sticky="nsew")
+        self.frac = ttk.Entry(self, font=('Arial', 12))
+        self.frac.grid(row=1, column=1, sticky="ew")
 
-            self.checkmark_image = self.download_image(config.NEXT_IMAGE)
-            self.next = ttk.Button(self, text="N", image=self.checkmark_image, command=self.switch_entry)
-            self.next.grid(row=3, column=0, sticky="nsew")
+        self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial', 12))
+        self.frac_label.grid(row=2, column=1, sticky="n")
 
-            self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
-            self.zero.grid(row=3, column=1, sticky="nsew")
+class KeyBoard(ttk.Frame):
+    def __init__(self, parent, input_measures, logger):
+        super().__init__(parent)
+        self.logger = logger
+        self.logger.info("Initializing KeyBoard")
+        
+        self.input_measures = input_measures
+        self.active_entry = input_measures[0].inch if input_measures else None
+        self.logger.debug(f"Initial active entry: {self.active_entry}")
 
-            self.delete_image = self.download_image(config.DELETE_IMAGE)
-            self.delete = ttk.Button(self, text="D", image=self.delete_image,  command=self.delete_text)
-            self.delete.grid(row=3, column=2, sticky="nsew")
-            
-        def download_image(self, image_url):
-            response = requests.get(image_url)
-            image_data = response.content
-            return PhotoImage(data=image_data)
+        self.columnconfigure(0, weight=1, minsize=80)
+        self.columnconfigure(1, weight=1, minsize=80)
+        self.columnconfigure(2, weight=1, minsize=80)
+        self.rowconfigure(0, weight=1, minsize=60)
+        self.rowconfigure(1, weight=1, minsize=60)
+        self.rowconfigure(2, weight=1, minsize=60)
+        self.rowconfigure(3, weight=1, minsize=60)
 
-        def insert_text(self, char):
-            if self.active_entry:
-                self.active_entry.insert(tk.END, str(char))
-                self.active_entry.focus_set()
+        self.one = ttk.Button(self, text="1", command=lambda: self.insert_text(1), width=8)
+        self.one.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
-        def delete_text(self):
+        self.two = ttk.Button(self, text="2", command=lambda: self.insert_text(2), width=8)
+        self.two.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+
+        self.three = ttk.Button(self, text="3", command=lambda: self.insert_text(3), width=8)
+        self.three.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
+
+        self.four = ttk.Button(self, text="4", command=lambda: self.insert_text(4), width=8)
+        self.four.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+
+        self.five = ttk.Button(self, text="5", command=lambda: self.insert_text(5), width=8)
+        self.five.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+
+        self.six = ttk.Button(self, text="6", command=lambda: self.insert_text(6), width=8)
+        self.six.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
+
+        self.seven = ttk.Button(self, text="7", command=lambda: self.insert_text(7), width=8)
+        self.seven.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
+
+        self.eight = ttk.Button(self, text="8", command=lambda: self.insert_text(8), width=8)
+        self.eight.grid(row=2, column=1, sticky="nsew", padx=5, pady=5)
+
+        self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9), width=8)
+        self.nine.grid(row=2, column=2, sticky="nsew", padx=5, pady=5)
+
+        self.checkmark_image = self.download_image(config.NEXT_IMAGE)
+        self.next = ttk.Button(self, image=self.checkmark_image, command=self.switch_entry, width=8)
+        self.next.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
+        if not self.checkmark_image:
+            self.next.configure(text="Next")
+            self.logger.debug("Fallback to text for Next button")
+
+        self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0), width=8)
+        self.zero.grid(row=3, column=1, sticky="nsew", padx=5, pady=5)
+
+        self.delete_image = self.download_image(config.DELETE_IMAGE)
+        self.delete = ttk.Button(self, image=self.delete_image, command=self.delete_text, width=8)
+        self.delete.grid(row=3, column=2, sticky="nsew", padx=5, pady=5)
+        if not self.delete_image:
+            self.delete.configure(text="Del")
+            self.logger.debug("Fallback to text for Delete button")
+        
+        self.logger.info("Keyboard buttons initialized")
+        self.logger.debug(f"Keyboard geometry: {self.winfo_geometry()}")
+
+    def insert_text(self, char):
+        if self.active_entry:
+            self.active_entry.insert(tk.END, str(char))
+            self.active_entry.focus_set()
+            self.logger.info(f"Inserted {char} into {self.active_entry}")
+
+    def delete_text(self):
+        if self.active_entry:
             current_text = self.active_entry.get()
-
             if current_text:
-                self.active_entry.delete(len(current_text)-1,tk.END)
+                self.active_entry.delete(len(current_text)-1, tk.END)
+                self.logger.info(f"Deleted character from {self.active_entry}")
             else:
                 self.switch_entry_back()
+                self.logger.info(f"Switched back entry due to empty field")
 
-        def reset_entry(self):
+    def reset_entry(self):
+        self.active_entry = self.input_measures[0].inch if self.input_measures else None
+        self.logger.info(f"Reset active entry to {self.active_entry}")
+        if self.active_entry:
+            self.active_entry.focus_set()
+
+    def switch_entry(self):
+        if not self.active_entry or not self.input_measures:
+            self.logger.warning("No active entry or input measures for switch_entry")
+            return
+        if self.active_entry == self.input_measures[0].inch:
+            self.active_entry = self.input_measures[0].frac
+        elif self.active_entry == self.input_measures[0].frac:
+            self.active_entry = self.input_measures[1].inch
+        elif self.active_entry == self.input_measures[1].inch:
+            self.active_entry = self.input_measures[1].frac
+        else:
             self.active_entry = self.input_measures[0].inch
-            self.active_entry.focus_set()
+        self.active_entry.focus_set()
+        self.logger.info(f"Switched to active entry: {self.active_entry}")
 
-        def switch_entry(self):
-            if self.active_entry == self.input_measures[0].inch:
-                self.active_entry = self.input_measures[0].frac
-            elif self.active_entry == self.input_measures[0].frac:
-                self.active_entry = self.input_measures[1].inch
-            elif self.active_entry == self.input_measures[1].inch:
-                self.active_entry = self.input_measures[1].frac
-            else:
-                self.active_entry = self.input_measures[0].inch  
-
-            self.active_entry.focus_set()
-
-        def switch_entry_back(self):
-            if self.active_entry == self.input_measures[0].inch:
-                self.active_entry = self.input_measures[1].frac
-            elif self.active_entry == self.input_measures[0].frac:
-                self.active_entry = self.input_measures[0].inch 
-            elif self.active_entry == self.input_measures[1].inch:
-                self.active_entry = self.input_measures[0].frac
-            else:
-                self.active_entry = self.input_measures[1].inch 
-
-            self.active_entry.focus_set()
+    def switch_entry_back(self):
+        if not self.active_entry or not self.input_measures:
+            self.logger.warning("No active entry or input measures for switch_entry_back")
+            return
+        if self.active_entry == self.input_measures[0].inch:
+            self.active_entry = self.input_measures[1].frac
+        elif self.active_entry == self.input_measures[0].frac:
+            self.active_entry = self.input_measures[0].inch
+        elif self.active_entry == self.input_measures[1].inch:
+            self.active_entry = self.input_measures[0].frac
+        else:
+            self.active_entry = self.input_measures[1].inch
+        self.active_entry.focus_set()
+        self.logger.info(f"Switched back to active entry: {self.active_entry}")
