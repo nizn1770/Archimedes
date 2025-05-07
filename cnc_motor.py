@@ -58,6 +58,8 @@ def rotate_motor(motor, direction, distance, rpm):
     logger.info(f"Rotating {motor} motor: direction={direction}, distance={distance} in, rpm={rpm}")
     dir_pin, pwm_pin, steps, pitch = MOTOR_PINS[motor]
     logger.debug(f"Using pins: dir_pin={dir_pin}, pwm_pin={pwm_pin}, steps={steps}, pitch={pitch}")
+    print(f"Using pins: dir_pin={dir_pin}, pwm_pin={pwm_pin}, steps={steps}, pitch={pitch}")
+
 
     GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u', 'o'] else GPIO.HIGH)
     logger.debug(f"Set {motor} direction to {'LOW' if direction in ['l', 'u', 'o'] else 'HIGH'}")
