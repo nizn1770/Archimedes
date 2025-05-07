@@ -420,3 +420,129 @@ class Application(tk.Tk):
             self.continue_window.geometry("800x480")
         self.continue_window.title("Continue Cut")
         self.continue_window.focus_force
+
+    class InputMeasure(ttk.Frame):
+        def __init__(self, parent, title_text):
+            super().__init__(parent)
+
+            self.columnconfigure(0, weight=1)
+            self.columnconfigure(1, weight=1)
+
+            self.rowconfigure(0, weight=1)
+            self.rowconfigure(1, weight=1)
+            self.rowconfigure(2, weight=1)
+
+            self.title = ttk.Label(self, text=title_text, font=('Arial 16'))
+            self.title.grid(row=0, column=0, columnspan=2, sticky="ew")
+
+            self.inch = ttk.Entry(self, font=('Arial 12'))
+            self.inch.grid(row=1, column=0, sticky="ew")
+
+            self.inch_label = ttk.Label(self, text="Inches", font=('Arial 12'))
+            self.inch_label.grid(row=2, column=0, sticky="n")
+
+            self.frac = ttk.Entry(self, font=('Arial 12'))
+            self.frac.grid(row=1, column=1, sticky="ew")
+
+            self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial 12'))
+            self.frac_label.grid(row=2, column=1, sticky="n")
+
+    class KeyBoard(ttk.Frame):
+        def __init__(self, parent, input_measures):
+            super().__init__(parent)
+            
+            self.input_measures = input_measures
+            self.active_entry = input_measures[0].inch
+
+            self.columnconfigure(0, weight=1)
+            self.columnconfigure(1, weight=1)
+            self.columnconfigure(2, weight=1)
+
+            self.rowconfigure(0, weight=1)
+            self.rowconfigure(1, weight=1)
+            self.rowconfigure(2, weight=1)
+            self.rowconfigure(3, weight=1)
+
+            self.one = ttk.Button(self, text="1", command=lambda: self.insert_text(1))
+            self.one.grid(row=0, column=0, sticky="nsew")
+
+            self.two = ttk.Button(self, text="2", command=lambda: self.insert_text(2))
+            self.two.grid(row=0, column=1, sticky="nsew")
+
+            self.three = ttk.Button(self, text="3", command=lambda: self.insert_text(3))
+            self.three.grid(row=0, column=2, sticky="nsew")
+
+            self.four = ttk.Button(self, text="4", command=lambda: self.insert_text(4))
+            self.four.grid(row=1, column=0, sticky="nsew")
+
+            self.five = ttk.Button(self, text="5", command=lambda: self.insert_text(5))
+            self.five.grid(row=1, column=1, sticky="nsew")
+
+            self.six = ttk.Button(self, text="6", command=lambda: self.insert_text(6))
+            self.six.grid(row=1, column=2, sticky="nsew")
+
+            self.seven = ttk.Button(self, text="7", command=lambda: self.insert_text(7))
+            self.seven.grid(row=2, column=0, sticky="nsew")
+
+            self.eight = ttk.Button(self, text="8", command=lambda: self.insert_text(8))
+            self.eight.grid(row=2, column=1, sticky="nsew")
+
+            self.nine = ttk.Button(self, text="9", command=lambda: self.insert_text(9))
+            self.nine.grid(row=2, column=2, sticky="nsew")
+
+            self.checkmark_image = self.download_image(config.NEXT_IMAGE)
+            self.next = ttk.Button(self, text="N", image=self.checkmark_image, command=self.switch_entry)
+            self.next.grid(row=3, column=0, sticky="nsew")
+
+            self.zero = ttk.Button(self, text="0", command=lambda: self.insert_text(0))
+            self.zero.grid(row=3, column=1, sticky="nsew")
+
+            self.delete_image = self.download_image(config.DELETE_IMAGE)
+            self.delete = ttk.Button(self, text="D", image=self.delete_image,  command=self.delete_text)
+            self.delete.grid(row=3, column=2, sticky="nsew")
+            
+        def download_image(self, image_url):
+            response = requests.get(image_url)
+            image_data = response.content
+            return PhotoImage(data=image_data)
+
+        def insert_text(self, char):
+            if self.active_entry:
+                self.active_entry.insert(tk.END, str(char))
+                self.active_entry.focus_set()
+
+        def delete_text(self):
+            current_text = self.active_entry.get()
+
+            if current_text:
+                self.active_entry.delete(len(current_text)-1,tk.END)
+            else:
+                self.switch_entry_back()
+
+        def reset_entry(self):
+            self.active_entry = self.input_measures[0].inch
+            self.active_entry.focus_set()
+
+        def switch_entry(self):
+            if self.active_entry == self.input_measures[0].inch:
+                self.active_entry = self.input_measures[0].frac
+            elif self.active_entry == self.input_measures[0].frac:
+                self.active_entry = self.input_measures[1].inch
+            elif self.active_entry == self.input_measures[1].inch:
+                self.active_entry = self.input_measures[1].frac
+            else:
+                self.active_entry = self.input_measures[0].inch  
+
+            self.active_entry.focus_set()
+
+        def switch_entry_back(self):
+            if self.active_entry == self.input_measures[0].inch:
+                self.active_entry = self.input_measures[1].frac
+            elif self.active_entry == self.input_measures[0].frac:
+                self.active_entry = self.input_measures[0].inch 
+            elif self.active_entry == self.input_measures[1].inch:
+                self.active_entry = self.input_measures[0].frac
+            else:
+                self.active_entry = self.input_measures[1].inch 
+
+            self.active_entry.focus_set()
