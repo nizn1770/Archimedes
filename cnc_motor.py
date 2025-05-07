@@ -67,7 +67,11 @@ def rotate_motor(motor, direction, distance, rpm):
     target_frequency = rpm * steps / 60
     logger.debug(f"Target frequency: {target_frequency} Hz")
 
-    RAMP_TIME = 0.5
+    # Define ramp parameters (fixed ramp time in seconds for ramp-up)
+    if motor in ['x', 'y']:
+        RAMP_TIME = 3.0
+    else:
+        RAMP_TIME = 0.5  # Time for ramp-up (adjust as needed)
     ramp_steps = int(target_frequency * RAMP_TIME)
     ramp_steps = max(1, min(ramp_steps, 200))
     logger.debug(f"Ramp steps: {ramp_steps}, ramp time: {RAMP_TIME} s")
