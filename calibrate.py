@@ -205,7 +205,7 @@ def main():
                 if not invalid:
                     if motor == "z":
                         distance = float(input("Enter distance (in inches): "))
-                        distance = distance * (1/3)
+                        distance = distance/3
                     else:
                         distance = float(input("Enter distance (in inches): "))
                     RPM = int(input("Enter RPM: "))
