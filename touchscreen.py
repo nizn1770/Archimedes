@@ -640,6 +640,11 @@ class KeyBoard(ttk.Frame):
         self.logger.info("Keyboard buttons initialized")
         self.logger.debug(f"Keyboard geometry: {self.winfo_geometry()}")
 
+    def download_image(self, image_url):
+        response = requests.get(image_url)
+        image_data = response.content
+        return PhotoImage(data=image_data)
+
     def insert_text(self, char):
         if self.active_entry:
             self.active_entry.insert(tk.END, str(char))
