@@ -93,6 +93,7 @@ def rotate_motor(motor, direction, distance, rpm):
 
     # Set motor direction based on input ('l' and 'u' -> LOW, 'r' and 'd' -> HIGH)
     GPIO.output(dir_pin, GPIO.LOW if direction in ['l', 'u', 'o'] else GPIO.HIGH)
+    print(f"Using pins: dir_pin={dir_pin}, pwm_pin={pwm_pin}, steps={steps}, pitch={pitch}")
 
     # Calculate total steps needed based on distance and pitch
     total_steps = int(distance * steps * pitch)
@@ -105,6 +106,7 @@ def rotate_motor(motor, direction, distance, rpm):
         RAMP_TIME = 0.5  # Time for ramp-up (adjust as needed)
     ramp_steps = int(target_frequency * RAMP_TIME)  # Steps for ramp-up
     ramp_steps = max(1, min(ramp_steps, 200))  # Cap between 1 and 200 steps
+    print(f"Ramp steps: {ramp_steps}")
 
     # Calculate frequency increment for ramp-up
     frequency_increment = target_frequency / ramp_steps if ramp_steps > 0 else target_frequency
@@ -120,6 +122,7 @@ def rotate_motor(motor, direction, distance, rpm):
 
     # Constant speed phase
     constant_steps = total_steps - ramp_steps  # Steps at full speed
+    print(f"Constant steps: {constant_steps}")
     if constant_steps > 0:
         sleep_time = 1 / (target_frequency * 2)  # Sleep time for target frequency
         for _ in range(constant_steps):
