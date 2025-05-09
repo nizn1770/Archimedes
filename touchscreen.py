@@ -566,13 +566,13 @@ class InputMeasure(ttk.Frame):
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
 
-        self.title = ttk.Label(self, text=title_text, font=('Arial', 16))
+        self.title = ttk.Label(self, text=title_text, font=('Arial', 24))
         self.title.grid(row=0, column=0, columnspan=2, sticky="ew")
 
-        self.inch = ttk.Entry(self, font=('Arial', 12))
+        self.inch = ttk.Entry(self, font=('Arial', 16))
         self.inch.grid(row=1, column=0, sticky="ew")
 
-        self.inch_label = ttk.Label(self, text="Inches", font=('Arial', 12))
+        self.inch_label = ttk.Label(self, text="Inches", font=('Arial', 16))
         self.inch_label.grid(row=2, column=0, sticky="n")
 
         self.frac = ttk.Entry(self, font=('Arial', 12))
