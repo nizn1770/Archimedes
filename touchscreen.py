@@ -184,7 +184,7 @@ class Application(tk.Tk):
             raise
 
         try:
-            submit = ttk.Button(self, text="Send Cut") #command=self.send_cuts
+            submit = ttk.Button(self, text="Send Cut", font=('Arial', 24)) #command=self.send_cuts
             submit.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
             self.logger.debug(f"Submit button created and gridded: {submit.winfo_geometry()}")
         except Exception as e:
@@ -578,7 +578,7 @@ class InputMeasure(ttk.Frame):
         self.frac = ttk.Entry(self, font=('Arial', 12))
         self.frac.grid(row=1, column=1, sticky="ew")
 
-        self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial', 12))
+        self.frac_label = ttk.Label(self, text="1/8 inch", font=('Arial', 16))
         self.frac_label.grid(row=2, column=1, sticky="n")
 
 class KeyBoard(ttk.Frame):
