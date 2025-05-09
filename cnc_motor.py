@@ -207,19 +207,19 @@ def design_show():
 
         move_actuator("o")
         move_head("i")
-        rotate_motor("x", "r", 25, 50)
+        rotate_motor("x", "r", 12, 50)
         move_head("o")
         move_actuator("i")
         move_head("i")
-        rotate_motor("y", "d", 30, 50)
+        rotate_motor("y", "d", 12, 50)
         move_head("o")
         move_actuator("o")
         move_head("i")
-        rotate_motor("x", "l", 25, 50)
+        rotate_motor("x", "l", 12, 50)
         move_head("o")
         move_actuator("i")
         move_head("i")
-        rotate_motor("y", "u", 30, 50)
+        rotate_motor("y", "u", 12, 50)
         move_head("o")
 
 def main():
