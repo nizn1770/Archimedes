@@ -184,7 +184,7 @@ class Application(tk.Tk):
             raise
 
         try:
-            submit = ttk.Button(self, text="Send Cut") #command=self.send_cuts
+            submit = ttk.Button(self, text="Send Cut", command=self.send_cuts)
             submit.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
             self.logger.debug(f"Submit button created and gridded: {submit.winfo_geometry()}")
         except Exception as e:
